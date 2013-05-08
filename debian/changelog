@@ -1,3 +1,12 @@
+firehol (1.296-2) unstable; urgency=low
+
+  * Fix iptables intrapositioned negation --mac-source ,
+    thanks to Alexander Prokopyev for pointing it out and to
+    Phil Whineray for backporting the Sanewall patch to FireHOL.
+  * Minor fixes.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Wed, 08 May 2013 17:14:16 +0000
+
 firehol (1.296-1) unstable; urgency=low
 
   * New maintainer (Closes: #660524).
@@ -33,7 +42,7 @@ firehol (1.296-1) unstable; urgency=low
   * Now plainly use iproute (Red Hat Bugzilla: #784520),
     thanks to Phil Whineray for hardening the original RedHat patch.
   * Temporary files are now left behind in case of error (Closes: #703341),
-    thanks to Phil Whineray who backported the sanewall patch to FireHOL.
+    thanks to Phil Whineray who backported the Sanewall patch to FireHOL.
   * `panic' option has been rationalized (Closes: #536675),
     thanks to Andrew Schulman and Phil Whineray.
   * Standard patch naming scheme (Closes: #705731), thanks to

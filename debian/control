@@ -5,11 +5,13 @@ Maintainer: Jerome Benoit <calculus@rezozer.net>
 Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.4
 Homepage: http://firehol.sourceforge.net/
+Vcs-Git: git://git.debian.org/git/collab-maint/firehol.git
+Vcs-Browser: http://git.debian.org/?p=collab-maint/firehol.git
 
 Package: firehol
 Architecture: all
-Depends: ${misc:Depends}, iptables (>= 1.2.4), iproute, bash (>= 2.04), lsb-base
-Recommends: modutils | module-init-tools, wget | curl, aggregate
+Depends: ${misc:Depends}, iptables (>= 1.4.14), iproute, bash (>= 4.2), lsb-base
+Recommends: kmod, wget | curl, aggregate
 Suggests: ulogd
 Description: easy to use but powerful iptables stateful firewall
  FireHOL generates generic firewalls with an extremely simple but
@@ -18,4 +20,4 @@ Description: easy to use but powerful iptables stateful firewall
  .
  FireHOL does not support ipv6.
  .
- FireHOL has been forked by sanewall which support ipv6.
+ FireHOL has been forked by Sanewall which will support ipv6.
