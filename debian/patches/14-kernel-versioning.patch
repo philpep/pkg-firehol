@@ -1,4 +1,4 @@
-Description: iptables intrapositioned negation fixe for MAC
+Description: kernel versionning enhancement
  Fix kernel version detection so that it is more flexible and
  less error prone.
  Thanks to Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn@axis.com>
