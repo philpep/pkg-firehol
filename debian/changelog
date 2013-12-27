@@ -1,3 +1,32 @@
+firehol (1.297-1) unstable; urgency=low
+
+  * New upstream version:
+    - fix the privacy breach by using Google Adsense in the HTML
+      documents as reported by lintian, thanks to the upstream
+      maintainer Phil Whineray <phil@firehol.org>;
+    - cosmetic fixes.
+  * Debianization:
+    - debian/copyright:
+      - Upstream-Contact field, refresh;
+      - Source fields, update;
+      - X-Upstream-* fields, update;
+      - Copyright field, correct.
+    - debian/control:
+      - Standards Version, bump to 3.9.5;
+      - Vcs-* headers, canonicalization and correction;
+      - Homepage field, update;
+      - Description field, refresh;
+      - minor updates.
+    - debian/watch:
+      - effective set up with upstream signature verification.
+    - debian/rules:
+      - get-orig-source uscan based target which downloads the currently
+        packaged upstream tarball;
+      - default target which basically queries package status with uscan
+        -- output in DEHS format.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Fri, 27 Dec 2013 20:13:00 +0000
+
 firehol (1.296-3) unstable; urgency=low
 
   * Fix kernel version detection so that it is more flexible and less error
