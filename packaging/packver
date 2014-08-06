@@ -1,0 +1,31 @@
+#!/bin/sh
+
+get_version() {
+	GIT_REF=' (HEAD, v2.0.0-rc.1, master),commit-2c8376b'
+	local IFS=":(), "
+	set -- "$GIT_REF"
+	ver='$Id: 2516841a576a86bd2747718e36a9f9703a956d3d $'
+	for i in $@
+	do
+		case "$i" in
+			*[0-9].[0.9]*)
+				echo "$i" | sed -e 's/^v//'
+				return 0
+			;;
+			commit-[0-9a-zA-Z]*)
+				ver="$i"
+			;;
+		esac
+	done
+	echo "$ver"
+	return 0
+}
+
+version=`get_version | grep -v '^.Id:'`
+if [ "$version" ]
+then
+	# SHA Id of packver will not help find a version of the scripts
+	echo "$version" | tr -d "\n"
+else
+	echo "development"  | tr -d "\n"
+fi
