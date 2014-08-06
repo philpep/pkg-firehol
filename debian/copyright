@@ -7,17 +7,22 @@ Source: http://firehol.org
 X-Source:
  http://freecode.com/projects/firehol
  http://www.ohloh.net/p/firehol
-X-Upstream-Vcs: http://github.com/ktsaou/firehol
+X-Source-Downloaded-From: http://firehol.org/download/releases
+X-Upstream-Vcs: git clone https://github.com/ktsaou/firehol.git
 X-Upstream-Bugs: http://github.com/ktsaou/firehol/issues
+Comment:
+ The upstream source tarball is repacked to drop off some substantial
+ weight by mainly cleaning up regenerated files.
 
 Files: *
 Copyright:
-  2003-2013 Costa Tsaousis <costa@tsaousis.gr>
+	2012-2014 Phil Whineray <phil@firehol.org>
+  2003-2014 Costa Tsaousis <costa@tsaousis.gr>
 License: GPL-2+
 
 Files: debian/*
 Copyright:
- 2013 Jerome Benoit <calculus@rezozer.net>
+ 2013-2014 Jerome Benoit <calculus@rezozer.net>
  2004-2009 Alexander Wirt <formorer@debian.org>
  2003-2004 Marc Brockschmidt <he@debian.org>
 License: GPL-2+

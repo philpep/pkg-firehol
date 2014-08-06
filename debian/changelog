@@ -1,3 +1,29 @@
+firehol (2.0.0~rc.1+ds-1) experimental; urgency=medium
+
+  * New upstream major version:
+     - IPv6 support (Closes: #292621);
+     - detailed documentation (Closes: #556575);
+     - traffic shaping support coined FireQOS as
+       counterpart of the frewall FireHOL;
+     - all non-centric Debian patches were incorporated.
+  * Debianization:
+     - debian/control:
+       - update;
+       - introduce new packages firehol-doc, fireqos and fireqos-doc;
+     - debian/{copyright,NEWS,README.{Debian,Services}}, refresh;
+     - debian/firehol.init, revisit (Closes: #574459);
+     - material for firehol-doc, fireqos and fireqos-doc;
+     - firehol has been moved from /sbin to /usr/sbin for consistency
+       reasons, fireqos being in /usr/sbin for similar reasons;
+     - /etc/default/firehol is no more source_d by firehol;
+     - /etc/init.d/firehol now exports variables defined in
+       /etc/default/firehol;
+     - debian/firehol.README.Debian, add notes (with samples) to log
+       firehol messages to a separate log file with rsyslog.
+  * Minor,cosmetic fixes submitted to the upstream maintainers.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Wed, 06 Aug 2014 15:04:42 +0000
+
 firehol (1.297-1) unstable; urgency=low
 
   * New upstream version:

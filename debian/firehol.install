@@ -1,1 +1,2 @@
 debian/firehol.conf etc/firehol
+sbin/firehol usr/sbin

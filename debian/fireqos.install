@@ -1,0 +1,2 @@
+debian/fireqos.conf etc/firehol
+sbin/fireqos usr/sbin

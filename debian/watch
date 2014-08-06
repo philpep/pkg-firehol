@@ -1,3 +1,4 @@
 version=3
-opts=pgpsigurlmangle=s/$/.asc/ \
-http://firehol.org/download/releases/(\d+\.\d+)/firehol-([\d\.]+)\.tar\.gz
+opts=dversionmangle=s/\+ds//,uversionmangle=s/-rc/~rc/,pgpsigurlmangle=s/$/.asc/ \
+http://firehol.org/download/releases/(\d+\.\d+|v\d+\.\d+\.\d+-rc\.\d+)/firehol-([\d\.]+|[\d+\.]+-rc\.\d+)\.tar\.xz \
+debian sh debian/repack

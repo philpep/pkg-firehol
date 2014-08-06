@@ -4,7 +4,10 @@ default:
 	@uscan --no-conf --dehs --report || true
 
 %:
-	dh $@
+	dh $@ --with autoreconf
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-maintainer-mode
 
 get-orig-source:
 	uscan --no-conf --download-current-version --verbose

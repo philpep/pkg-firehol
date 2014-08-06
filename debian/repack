@@ -1,0 +1,127 @@
+#!/bin/sh
+
+PACKAGE_NAME=firehol
+
+set -e
+set -u
+
+usage() {
+	echo "Usage: repack --upstream-version <ver> <downloaded file>"
+	exit 1
+	}
+
+if [ "$#" != "3" ]; then
+	usage
+fi
+if [ "$1" != "--upstream-version" ]; then
+	usage
+fi
+if [ ! -f "$3" ]; then
+	if [ -n "$3" ]; then
+		echo "$3 doesn't exist"
+	fi
+	usage
+fi
+UPSTREAM_VERSION="$2"
+UPSTREAM_TARBALLZZ="$3"
+
+DEBIAN_SUFFIX="+ds"
+##DEBIAN_SUFFIX="+ds1"
+####DEBIAN_ENCAPSULATEDFOLDERNAME="${PACKAGE_NAME}-usrc"
+
+DEBIAN_UVERSION=${UPSTREAM_VERSION}${DEBIAN_SUFFIX}
+DEBIAN_ROOTFOLDERNAME="${PACKAGE_NAME}-${DEBIAN_UVERSION}.orig"
+DEBIAN_TARBALLXZ="$(dirname $UPSTREAM_TARBALLZZ)/${PACKAGE_NAME}_${DEBIAN_UVERSION}.orig.tar.xz"
+
+REPACK_TMPDIR=`mktemp -d ./repackXXXXXX`
+REPACK_TMPDIR=$(readlink -f "$REPACK_TMPDIR")
+trap "/bin/rm -rf \"$REPACK_TMPDIR\"" QUIT INT EXIT
+
+message() {
+	echo
+	echo "-- -- $1"
+	echo
+	}
+
+message "Repackaging $UPSTREAM_TARBALLZZ"
+
+UPSTREAM_ROOTFOLDER="${REPACK_TMPDIR}/unpacked"
+mkdir "${UPSTREAM_ROOTFOLDER}"
+tar -C "${UPSTREAM_ROOTFOLDER}" -xf "${UPSTREAM_TARBALLZZ}" || unzip -d "${UPSTREAM_ROOTFOLDER}" "${UPSTREAM_TARBALLZZ}"
+if [ `ls -1 "${UPSTREAM_ROOTFOLDER}" | wc -l` -eq 1 ]; then
+	UPSTREAM_ROOTFOLDER="${UPSTREAM_ROOTFOLDER}/`ls -1 "${UPSTREAM_ROOTFOLDER}"`"
+fi
+
+DEBIAN_ROOTFOLDER="${REPACK_TMPDIR}/${DEBIAN_ROOTFOLDERNAME}"
+## repack
+####set -f
+REPACK_WORKING_FOLDER=$(pwd)
+cd "${UPSTREAM_ROOTFOLDER}"
+
+####. "${REPACK_WORKING_FOLDER}/debian/repack.local"
+## mimic maintainer-clean
+rm --verbose --force --recursive -- doc/firehol/man/man5
+rm --verbose --force --recursive -- doc/fireqos/man/man5
+rm --verbose --force --recursive -- doc/firehol/man/man1
+rm --verbose --force --recursive -- doc/fireqos/man/man1
+rmdir --verbose --ignore-fail-on-non-empty -- doc/firehol/man
+rmdir --verbose --ignore-fail-on-non-empty -- doc/fireqos/man
+rm --verbose --force -- doc/firehol/firehol-manual.html
+rm --verbose --force -- doc/fireqos/fireqos-manual.html
+rm --verbose --force -- doc/firehol/firehol-manual.pdf
+rm --verbose --force -- doc/fireqos/fireqos-manual.pdf
+## clean up extra maintainer generated material
+rm --verbose --force -- doc/firehol/firehol-services.5.md
+rm --verbose --force -- doc/service-links
+## mimic autoreconf clean up
+rm --verbose --force -- autotool/install-sh
+rm --verbose --force -- autotool/missing
+rmdir --verbose --ignore-fail-on-non-empty -- autotool
+rm --verbose --force -- sbin/Makfile.in
+rm --verbose --force -- etc/Makfile.in
+rm --verbose --force -- examples/Makfile.in
+rm --verbose --force -- doc/tools/Makfile.in
+rm --verbose --force -- doc/Makfile.in
+rm --verbose --force -- m4/Makfile.in
+rm --verbose --force -- packaging/Makfile.in
+rm --verbose --force -- Makefile.in
+rm --verbose --force -- aclocal.m4
+rm --verbose --force -- configure
+## mimic make clean up
+rm --verbose --force -- doc/firehol/tmp-html-combined.md
+rm --verbose --force -- doc/fireqos/tmp-html-combined.md
+rm --verbose --force -- doc/firehol/tmp-pdf-combined.md
+rm --verbose --force -- doc/fireqos/tmp-pdf-combined.md
+#:
+
+cd ${REPACK_WORKING_FOLDER}
+set +f
+## end
+####if [ -n "${DEBIAN_ENCAPSULATEDFOLDERNAME}" ]; then
+####	mkdir "${DEBIAN_ROOTFOLDER}"
+####	mv "${UPSTREAM_ROOTFOLDER}" "${DEBIAN_ROOTFOLDER}/${DEBIAN_ENCAPSULATEDFOLDERNAME}"
+####else
+	mv "${UPSTREAM_ROOTFOLDER}" "${DEBIAN_ROOTFOLDER}"
+####fi
+
+REPACK_TARBALL="${REPACK_TMPDIR}/repacked.tar"
+REPACK_TARBALLXZ="${REPACK_TARBALL}.xz"
+( cd "${REPACK_TMPDIR}" && \
+	find -L "${DEBIAN_ROOTFOLDERNAME}" -xdev -type f -print | sort | \
+	tar -T-  --owner=root --group=root --mode=a+rX --create --file "${REPACK_TARBALL}" \
+	)
+xz -9e < "${REPACK_TARBALL}" > "${REPACK_TARBALLXZ}"
+mv "${REPACK_TARBALLXZ}" "${DEBIAN_TARBALLXZ}"
+
+message "Testing ${DEBIAN_TARBALLXZ}"
+
+xz --verbose --test "${DEBIAN_TARBALLXZ}"
+
+message "Printing information about ${DEBIAN_TARBALLXZ}"
+
+xz --verbose --list "${DEBIAN_TARBALLXZ}"
+
+message "Quitting"
+
+##
+## eos

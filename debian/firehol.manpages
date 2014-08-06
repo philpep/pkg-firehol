@@ -1,2 +1,2 @@
-man/firehol.1
-man/firehol.conf.5
+debian/tmp/usr/share/man/man1/firehol.1
+debian/tmp/usr/share/man/man5/firehol.conf.5

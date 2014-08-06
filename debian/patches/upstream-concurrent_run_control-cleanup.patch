@@ -1,0 +1,30 @@
+Description: clean up concurrent run control
+ Clean up the concurrent run control lock file
+ at exit time.
+Origin: debian
+Author: Jerome Benoit <calculus@rezozer.net>
+Last-Update: 2014-08-06
+
+--- a/sbin/firehol.in
++++ b/sbin/firehol.in
+@@ -349,7 +349,7 @@
+ }
+ 
+ # Concurrent run control
+-FIREHOL_LOCK_FILE="/var/run/firehol.lck"
++FIREHOL_LOCK_FILE="/var/run/firehol.lock"
+ 
+ firehol_concurrent_run_lock() {
+ 	exec 200>"${FIREHOL_LOCK_FILE}"
+@@ -527,7 +527,10 @@
+ 			"${FIREHOL_NOTIFICATION_PROGRAM}" "${FIREHOL_CONFIG}" "${result}" "${restored}" "${work_error}" "${work_runtime_error}" >/dev/null 2>&1 </dev/null &
+ 		fi
+ 	fi
+-	
++
++	# remove concurrent run control
++	test -f "${FIREHOL_LOCK_FILE}" && rm -f "${FIREHOL_LOCK_FILE}" > /dev/null 2>&1
++
+ 	return 0
+ }
+ 

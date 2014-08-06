@@ -1,0 +1,73 @@
+Description: drop out URL fetch functions
+ As no more material is grabbed from the internet,
+ the opportunity is taken to drop out the firehol
+ function wget_cmd and firehol_wget, so to drop
+ out dependency of firehol on wget or curl.
+Origin: debian
+Author: Jerome Benoit <calculus@rezozer.net>
+Last-Update: 2014-08-06
+
+--- a/sbin/firehol.in
++++ b/sbin/firehol.in
+@@ -182,7 +182,6 @@
+ # Currently the following commands are required only when needed.
+ # (i.e. Command on Demand)
+ #
+-# wget or curl (either is fine)
+ # zcat or gzcat or gzip (either or none is fine)
+ # less or more (either or none is fine)
+ # ip
+@@ -291,26 +290,6 @@
+ 	return 1
+ }
+ 
+-# Fetch a URL and output it to the standard output.
+-wget_cmd() {
+-	local url="${1}"
+-	
+-	require_cmd wget curl
+-	
+-	if [ ! -z "${WGET_CMD}" ]
+-	then
+-		${WGET_CMD} -O - "${url}" 2>/dev/null
+-		return $?
+-	elif [ ! -z "${CURL_CMD}" ]
+-	then
+-		${CURL_CMD} -s "${url}"
+-		return $?
+-	fi
+-	
+-	error "Cannot use either 'wget' or 'curl' to fetch '${url}'."
+-	return 1
+-}
+-
+ gawk_cmd() {
+ 	require_cmd -n gawk awk
+ 	test -z "${GAWK_CMD}" && GAWK_CMD="${AWK_CMD}"
+@@ -2797,26 +2776,6 @@
+ 	return 0
+ }
+ 
+-# Fetch a URL and output it to the standard output.
+-firehol_wget() {
+-	local url="${1}"
+-	
+-	require_cmd wget curl
+-	
+-	if [ ! -z "${WGET_CMD}" ]
+-	then
+-		${WGET_CMD} -O - "${url}" 2>/dev/null
+-		return $?
+-	elif [ ! -z "${CURL_CMD}" ]
+-	then
+-		${CURL_CMD} -s "${url}"
+-		return $?
+-	fi
+-	
+-	error "Cannot use either 'wget' or 'curl' to fetch '${url}'."
+-	return 1
+-}
+-
+ # define custom actions
+ action() {
+ 	work_realcmd_helper $FUNCNAME "$@"
