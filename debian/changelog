@@ -19,10 +19,12 @@ firehol (2.0.0~rc.1+ds-1) experimental; urgency=medium
      - /etc/init.d/firehol now exports variables defined in
        /etc/default/firehol;
      - debian/firehol.README.Debian, add notes (with samples) to log
-       firehol messages to a separate log file with rsyslog.
-  * Minor,cosmetic fixes submitted to the upstream maintainers.
+       firehol messages to a separate log file with rsyslog;
+     - make /etc/fireqos the configuration folder for FireQOS
+       instead of /etc/firehol as in the upstream distribution.
+  * Minor, cosmetic fixes submitted to the upstream maintainers.
 
- -- Jerome Benoit <calculus@rezozer.net>  Wed, 06 Aug 2014 15:04:42 +0000
+ -- Jerome Benoit <calculus@rezozer.net>  Fri, 15 Aug 2014 13:53:52 +0000
 
 firehol (1.297-1) unstable; urgency=low
 

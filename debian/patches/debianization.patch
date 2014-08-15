@@ -2,7 +2,7 @@ Description: debianization
  Meant to maintain a minimal debian/rules, to fix warnings,
  to address Debian specific stuff in general.
 Author: Jerome Benoit <calculus@rezozer.net>
-Last-Update: 2014-08-02
+Last-Update: 2014-08-15
 
 --- a/doc/firehol/Makefile.am
 +++ b/doc/firehol/Makefile.am

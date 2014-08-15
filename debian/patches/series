@@ -7,3 +7,4 @@ upstream-load_kernel_modules-more_effective.patch
 upstream-concurrent_run_control-cleanup.patch
 upstream-lock_folder.patch
 debianization.patch
+debianization-fireqos.patch
