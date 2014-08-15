@@ -47,7 +47,6 @@ Package: fireqos
 Architecture: all
 Depends: ${misc:Depends}, lsb-base, kmod, iproute2, tcpdump, procps
 Recommends: firehol (= ${binary:Version})
-Suggests: ulogd2
 Description: easy to use but powerful traffic shaping tool (program)
  FireQOS generates generic traffic shapers with an extremely simple but
  powerful configuration language based on bash, enabling you to design
