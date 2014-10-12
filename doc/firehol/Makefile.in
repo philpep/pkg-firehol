@@ -34,6 +34,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+@MAINTAINER_MODE_TRUE@am__append_1 = $(MAINTAINERCLEANFILES)
 subdir = doc/firehol
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -139,6 +140,7 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_CMD = @MKDIR_CMD@
 MKDIR_P = @MKDIR_P@
+MKTEMP_CMD = @MKTEMP_CMD@
 MV_CMD = @MV_CMD@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -351,7 +353,7 @@ CLEANFILES = \
        tmp-manual.html \
        tmp-pdf-combined.md
 
-DISTCLEANFILES = 
+DISTCLEANFILES = $(am__append_1)
 MAINTAINERCLEANFILES = \
 	service-links \
 	$(MANUALMARKDOWN_GENERATED) \
@@ -702,6 +704,7 @@ uninstall-man: uninstall-man1 uninstall-man5
 @MAINTAINER_MODE_TRUE@	$(COMBINEPANDOC) pdf tmp-pdf-combined.md contents.md tmp-anchor-links
 @MAINTAINER_MODE_TRUE@	$(SED) -i -e '/^%/s/DATE/@PACKAGE_BUILT_DATE@/' -e '/^%/s/VERSION/@PACKAGE_VERSION@/' tmp-pdf-combined.md
 @MAINTAINER_MODE_TRUE@	$(PANDOC) $(PANDOC_PDF_FLAGS) -o $@ tmp-pdf-combined.md
+@MAINTAINER_MODE_TRUE@	rm tmp-pdf-combined.md
 @MAINTAINER_MODE_TRUE@	$(PANDOCPOST) $(PANDOC_VERSION) pdf $@
 
 @MAINTAINER_MODE_TRUE@firehol-manual.html: *.md $(MANUALMARKDOWN_GENERATED) $(MANUAL_LINKS)
@@ -709,9 +712,10 @@ uninstall-man: uninstall-man1 uninstall-man5
 @MAINTAINER_MODE_TRUE@	$(COMBINEPANDOC) html tmp-html-combined.md contents.md tmp-anchor-links
 @MAINTAINER_MODE_TRUE@	$(SED) -i -e '/^%/s/DATE/@PACKAGE_BUILT_DATE@/' -e '/^%/s/VERSION/@PACKAGE_VERSION@/' tmp-html-combined.md
 @MAINTAINER_MODE_TRUE@	$(PANDOC) $(PANDOC_HTML_FLAGS) -o tmp-manual.html tmp-html-combined.md
+@MAINTAINER_MODE_TRUE@	rm tmp-html-combined.md
 @MAINTAINER_MODE_TRUE@	$(CHECKLINKS) tmp-manual.html $(MANUAL_LINKS)
 @MAINTAINER_MODE_TRUE@	$(PANDOCPOST) $(PANDOC_VERSION) html tmp-manual.html
-@MAINTAINER_MODE_TRUE@	cp tmp-manual.html $@
+@MAINTAINER_MODE_TRUE@	mv tmp-manual.html $@
 
 uninstall-local:
 	@-rmdir --ignore-fail-on-non-empty $(DESTDIR)$(dochtmldir)

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 get_version() {
-	GIT_REF=' (HEAD, v2.0.0-rc.1, master),commit-2c8376b'
+	GIT_REF=' (HEAD, v2.0.0-rc.2, master),commit-a3b162c'
 	local IFS=":(), "
 	set -- "$GIT_REF"
 	ver='$Id: 2516841a576a86bd2747718e36a9f9703a956d3d $'
