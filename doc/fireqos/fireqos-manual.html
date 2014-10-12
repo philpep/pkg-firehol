@@ -1,0 +1,1104 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="generator" content="pandoc" />
+    <meta name="author" content="Copyright (c) 2004,2013-2014 Costa Tsaousis costa@tsaousis.org" />
+    <meta name="author" content="Copyright (c) 2012-2014 Phil Whineray phil@sanewall.org" />
+    <title>FireQOS Reference</title>
+    <link rel="stylesheet" href="firehol-manual.css" type="text/css" />
+  </head>
+  <body>
+    <div id="header">
+      <h1 class="title">FireQOS Reference</h1>
+      <h2 class="author">Copyright (c) 2004,2013-2014 Costa Tsaousis <a href="mailto:costa@tsaousis.org">costa@tsaousis.org</a></h2>
+      <h2 class="author">Copyright (c) 2012-2014 Phil Whineray <a href="mailto:phil@sanewall.org">phil@sanewall.org</a></h2>
+      <h3 class="date">Version 2.0.0-rc.2 (Built 06 Oct 2014)</h3>
+    </div>
+    <div id="TOC">
+      <ul>
+        <li>
+          <a href="#fireqos-reference">FireQOS Reference</a>
+          <ul>
+            <li>
+              <a href="#running-and-configuring-fireqos">Running and Configuring FireQOS</a>
+              <ul>
+                <li>
+                  <a href="#fireqos1">fireqos(1)</a>
+                </li>
+                <li>
+                  <a href="#fireqos.conf5">fireqos.conf(5)</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#organising-traffic-with-fireqos">Organising Traffic with FireQOS</a>
+              <ul>
+                <li>
+                  <a href="#fireqos-interface5">fireqos-interface(5)</a>
+                </li>
+                <li>
+                  <a href="#fireqos-class5">fireqos-class(5)</a>
+                </li>
+                <li>
+                  <a href="#fireqos-match5">fireqos-match(5)</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#optional-parameters-for-fireqos-commands">Optional Parameters for FireQOS Commands</a>
+              <ul>
+                <li>
+                  <a href="#fireqos-params5">fireqos-params(5)</a>
+                </li>
+                <li>
+                  <a href="#fireqos-params-class5">fireqos-params-class(5)</a>
+                </li>
+                <li>
+                  <a href="#fireqos-params-match5">fireqos-params-match(5)</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <p></p>
+<!--
+  This file is processed to include inline the individual pages
+  single-page HTML and PDF. It is used as-is as a contents page
+  for multi-page formats.
+  -->
+    <p>The latest version of this manual is available online as a <a href="http://firehol.org/fireqos-manual.pdf">PDF</a>, as <a href="http://firehol.org/fireqos-manual.html">single page HTML</a> and also as <a href="http://firehol.org/fireqos-manual/">multiple pages within the website</a>.</p>
+    <h1 id="fireqos-reference">
+      <a href="#TOC">FireQOS Reference</a>
+    </h1>
+    <h2 id="running-and-configuring-fireqos">
+      <a href="#TOC">Running and Configuring FireQOS</a>
+    </h2>
+    <h3 id="fireqos1">
+      <a href="#TOC">fireqos(1)</a>
+    </h3>
+    <h4 id="name">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos - an easy to use but powerful traffic shaping tool</p>
+    <h4 id="synopsis">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>fireqos <em>CONFIGFILE</em> [start | debug] [ -- conf-arg ... ]</p>
+    <p>fireqos { stop | clear_all_qos }</p>
+    <p>fireqos status [<em>name</em> [ dump [<em>class</em>]]]</p>
+    <p>fireqos { dump | tcpdump } <em>name</em> <em>class</em> [ <em>tcpdump-arg</em> ... ]</p>
+    <p>fireqos { drops | overlimits | requeues } <em>name</em></p>
+    <h4 id="description">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>FireQOS is a helper to assist you configure traffic shaping on Linux.</p>
+    <p>Run without any arguments, <code>fireqos</code> will present some help on usage.</p>
+    <p>When given <em>CONFIGFILE</em>, <code>fireqos</code> will use the named file instead of <code>/etc/firehol/fireqos.conf</code> as its configuration.</p>
+    <p>The parameter <em>name</em> always refers to an interface name from the configuration file. The parameter <em>class</em> always refers to a named class within a named interface.</p>
+    <p>It is possible to pass arguments for use by the configuration file separating any conf-arg values from the rest of the arguments with <code>--</code>. The arguments are accessible in the configuration using standard bash(1) syntax e.g. $1, $2, etc.</p>
+    <h4 id="commands">
+      <a href="#TOC">COMMANDS</a>
+    </h4>
+    <dl>
+      <dt>start; debug</dt>
+      <dd>
+        <p>Activates traffic shaping on all interfaces, as given in the configuration file. When invoked as <code>debug</code>, FireQOS also prints all of the tc(8) commands it executes.</p>
+      </dd>
+      <dt>stop</dt>
+      <dd>
+        <p>Removes all traffic shaping applied by FireQOS (it does not touch QoS on other interfaces and IFBs used by other tools).</p>
+      </dd>
+      <dt>clear_all_qos</dt>
+      <dd>
+        <p>Removes all traffic shaping on all network interfaces and removes all IFB devices from the system, even those applied by other tools.</p>
+      </dd>
+      <dt>status</dt>
+      <dd>
+        <p>Shows live utilisation for the specified interface. FireQOS will show you the rate of traffic on all classes, adding one line per second (similarly to vmstat, iostat, etc.)</p>
+        <p>If <code>dump</code> is specified, it tcpdumps the traffic in the given class of the interface.</p>
+      </dd>
+      <dt>tcpdump; dump</dt>
+      <dd>
+        <p>FireQOS temporarily mirrors the traffic of any leaf class to an IFB device. Then it runs tcpdump(8) on this interface to dump the traffic to your console.</p>
+        <p>You may add any tcpdump(8) parameters you like to the command line, (to dump the traffic to a file, match a subset of the traffic, etc.), for example this:</p>
+        <pre><code>fireqos tcpdump adsl-in voip -n</code></pre>
+        <p>will start a tcpdump of all traffic on interface adsl-in, in class voip. The parameter <code>-n</code> is a tcpdump(8) parameter.</p>
+        <blockquote>
+          <p>
+            <strong>Note</strong>
+          </p>
+          <p>When FireQOS is running in <code>tcpdump</code> mode, it locks itself and will refuse to run in parallel with another FireQOS altering the QoS, or tcpdumping other traffic. This is because FireQOS reserves device ifb0 for monitoring. If two FireQOS processes were allowed to <code>tcpdump</code> in parallel, your dumps would be wrong. So it locks itself to prevent such a case.</p>
+        </blockquote>
+      </dd>
+      <dt>drops</dt>
+      <dd>
+        <p>Shows packets dropped per second, per class, for the specified interface.</p>
+      </dd>
+      <dt>overlimits</dt>
+      <dd>
+        <p>Shows packets delayed per second, per class, for the specified interface.</p>
+      </dd>
+      <dt>requeues</dt>
+      <dd>
+        <p>Shows packets requeued per second, per class, for the specified interface.</p>
+      </dd>
+    </dl>
+    <h4 id="files">
+      <a href="#TOC">FILES</a>
+    </h4>
+    <p>
+      <code>/etc/firehol/fireqos.conf</code>    </p>
+    <h4 id="see-also">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+      <li><a href="http://lartc.org/manpages/tc.html">tc(8)</a> - show / manipulate traffic control settings</li>
+      <li><a href="http://www.tcpdump.org/manpages/tcpdump.1.html">tcpdump(8)</a> - show / manipulate traffic control settings</li>
+    </ul>
+    <p></p>
+    <h3 id="fireqos.conf5">
+      <a href="#TOC">fireqos.conf(5)</a>
+    </h3>
+    <h4 id="name-1">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos.conf - FireQOS configuration file</p>
+<!--
+extra-manpage: fireqos.conf.5
+  -->
+    <h4 id="description-1">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>This file defines the traffic shaping that will be applied by <a href="#fireqos1">fireqos(1)</a>.</p>
+    <p>The default configuration file is <code>/etc/firehol/fireqos.conf</code>. It can be overridden from the command line.</p>
+    <p>A configuration consists of a number of input and output <code>interface</code> definitions (see <a href="#fireqos-interface5">fireqos-interface(5)</a>). Each <code>interface</code> can define any number of (optionally nested) <code>class</code>es (see <a href="#fireqos-class5">fireqos-class(5)</a>) which shape the traffic which they <code>match</code> (see <a href="#fireqos-match5">fireqos-match(5)</a>).</p>
+    <h4 id="speed-units">
+      <a href="#TOC">SPEED UNITS</a>
+    </h4>
+    <p>In FireQOS, speeds can be expressed in the following units:</p>
+    <dl>
+      <dt>#<code>bps</code></dt>
+      <dd>
+        <p># bytes per second</p>
+      </dd>
+      <dt>#<code>kbps</code>; #<code>Kbps</code></dt>
+      <dd>
+        <p># kilobytes per second</p>
+      </dd>
+      <dt>#<code>mbps</code>; #<code>Mbps</code></dt>
+      <dd>
+        <p># megabytes per second</p>
+      </dd>
+      <dt>#<code>gbps</code>; #<code>Gbps</code></dt>
+      <dd>
+        <p># gigabytes per second</p>
+      </dd>
+      <dt>#<code>bit</code></dt>
+      <dd>
+        <p># bits per second</p>
+      </dd>
+      <dt>#<code>kbit</code>; #<code>Kbit</code>; #</dt>
+      <dd>
+        <p># kilobits per second (default)</p>
+      </dd>
+      <dt>#<code>mbit</code>; #<code>Mbit</code></dt>
+      <dd>
+        <p># megabits per second</p>
+      </dd>
+      <dt>#<code>gbit</code>; #<code>Gbit</code></dt>
+      <dd>
+        <p># gigabits per second</p>
+      </dd>
+      <dt>#<code>%</code></dt>
+      <dd>
+        <p>In a <code>class</code>, uses this percentage of the enclosing <code>rate</code>.</p>
+      </dd>
+    </dl>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>The default, <code>kbit</code> is different to tc(8) which assumes bytes per second when no unit is specified.</p>
+    </blockquote>
+    <h4 id="example">
+      <a href="#TOC">EXAMPLE</a>
+    </h4>
+    <pre><code>
+ # incoming traffic from my ADSL router
+ interface eth2 adsl-in input rate 10500kbit adsl remote pppoe-llc
+   class voip commit 100kbit pfifo
+     match udp ports 5060,10000:10100 # asterisk sip and rtp
+     match udp ports 16393:16402 # apple facetime
+
+   class realtime commit 10%
+     match tcp port 22,1195:1198,1753 # ssh, openvpn, pptp
+     match udp port 53 # dns
+     match proto GRE
+     match icmp
+     match tcp syn
+     match tcp ack
+
+   class clients commit 10%
+     match tcp port 20,21,25,80,143,443,465,873,993 # mail, web, ftp, etc
+
+ # unmatched traffic goes here ('default' is a special name)
+   class default max 90%
+
+ # I define torrents beneath the default class, so they slow
+ # down when the default class is willing to get bandwidth
+   class torrents max 90%
+     match port 51414 # my torrent client
+
+ # outgoing traffic to my ADSL router
+ interface eth2 adsl-out output rate 800kbit adsl remote pppoe-llc
+   class voip commit 100kbit pfifo
+     match udp ports 5060,10000:10100 # asterisk sip and rtp
+     match udp ports 16393:16402 # apple facetime
+
+   class realtime commit 10%
+     match tcp port 22,1195:1198,1753 # ssh, openvpn, pptp
+     match udp port 53 # dns
+     match proto GRE
+     match icmp
+     match tcp syn
+     match tcp ack
+
+   class clients commit 10%
+     match tcp port 20,21,25,80,143,443,465,873,993 # mail, web, ftp, etc
+
+ # unmatched traffic goes here ('default' is a special name)
+   class default max 90%
+
+ # I define torrents beneath the default class, so they slow
+ # down when the default class is willing to get bandwidth
+   class torrents max 90%
+     match port 51414 # my torrent client</code></pre>
+    <h4 id="see-also-1">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos1">fireqos(1)</a> - FireQOS program</li>
+      <li><a href="#fireqos-interface5">fireqos-interface(5)</a> - QOS interface definition</li>
+      <li><a href="#fireqos-class5">fireqos-class(5)</a> - QOS class definition</li>
+      <li><a href="#fireqos-match5">fireqos-match(5)</a> - QOS traffic match</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+      <li><a href="http://lartc.org/manpages/tc.html">tc(8)</a> - show / manipulate traffic control settings</li>
+    </ul>
+    <p></p>
+    <h2 id="organising-traffic-with-fireqos">
+      <a href="#TOC">Organising Traffic with FireQOS</a>
+    </h2>
+    <h3 id="fireqos-interface5">
+      <a href="#TOC">fireqos-interface(5)</a>
+    </h3>
+    <h4 id="name-2">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-interface - create an interface definition</p>
+    <h4 id="synopsis-1">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>{ interface | interface4 } <em>device</em> <em>name</em> <em>direction</em> [<em>optional-class-params</em>] { rate | commit | min } <em>speed</em></p>
+    <p>interface46 <em>...</em></p>
+    <p>interface6 <em>...</em></p>
+<!--
+extra-manpage: fireqos-interface46.5
+extra-manpage: fireqos-interface4.5
+extra-manpage: fireqos-interface6.5
+  -->
+    <h4 id="description-2">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>Writing <code>interface</code> or <code>interface4</code> applies traffic shaping rules only to IPv4 traffic.</p>
+    <p>Writing <code>interface6</code> applies traffic shaping rules only to IPv6 traffic.</p>
+    <p>Writing <code>interface46</code> applies traffic shaping rules to both IPv4 and IPv6 traffic.</p>
+    <p>The actual traffic shaping behaviour of a class is defined by adding classes. See <a href="#fireqos-class5">fireqos-class(5)</a>.</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>To achieve best results with <code>incoming</code> traffic shaping, you should not use 100% of the available bandwidth at the interface level.</p>
+      <p>If you use all there is, at 100% utilisation of the link, the neighbour routers will start queuing packets. This will destroy prioritisation. Try 85% or 90% instead.</p>
+    </blockquote>
+    <h4 id="parameters">
+      <a href="#TOC">PARAMETERS</a>
+    </h4>
+    <dl>
+      <dt>
+        <em>device</em>
+      </dt>
+      <dd>
+        <p>This is the interface name as shown by <code>ip link show</code> (e.g. eth0, ppp1, etc.)</p>
+      </dd>
+      <dt>
+        <em>name</em>
+      </dt>
+      <dd>
+        <p>This is a single-word name for this interface and is used for retrieving status information later.</p>
+      </dd>
+      <dt>
+        <em>direction</em>
+      </dt>
+      <dd>
+        <p>If set to <code>input</code>, traffic coming in to the interface is shaped.</p>
+        <p>If set to <code>output</code>, traffic going out via the interface is shaped.</p>
+      </dd>
+      <dt>
+        <em>optional-class-params</em>
+      </dt>
+      <dd>
+        <p>For a list of optional class parameters which can be applied to an interface, see <a href="#fireqos-params-class5">fireqos-params-class(5)</a>.</p>
+      </dd>
+      <dt>
+        <em>speed</em>
+      </dt>
+      <dd>
+        <p>For an interface, the committed <em>speed</em> must be specified with the <code>rate</code> option. The speed can be expressed in any of the units described in <a href="#fireqos.conf5">fireqos.conf(5)</a>.</p>
+      </dd>
+    </dl>
+    <h4 id="examples">
+      <a href="#TOC">EXAMPLES</a>
+    </h4>
+    <p>To create an input policy on eth0, capable of delivering up to 1Gbit of traffic:</p>
+    <pre><code>interface eth0 lan-in input rate 1Gbit</code></pre>
+    <h4 id="see-also-2">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li><a href="#fireqos-class5">fireqos-class(5)</a> - QOS class definition</li>
+      <li><a href="#fireqos-params-class5">fireqos-params-class(5)</a> - QOS class parameters</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+    </ul>
+    <p></p>
+    <h3 id="fireqos-class5">
+      <a href="#TOC">fireqos-class(5)</a>
+    </h3>
+    <h4 id="name-3">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-class - traffic class definition</p>
+    <h4 id="synopsis-2">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>{class|class4|class6|class46} [group] <em>name</em> [<em>optional-class-params</em>]</p>
+    <p>{class|class4|class6|class46} group end</p>
+<!--
+extra-manpage: fireqos-class46.5
+extra-manpage: fireqos-class4.5
+extra-manpage: fireqos-class6.5
+  -->
+    <h4 id="description-3">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>There is also an optional <code>match</code> parameter called <code>class</code>; see <a href="#class">fireqos-params-match(5)</a>.</p>
+    <p>Writing <code>class</code> inherits the IPv4/IPv6 version from its enclosing interface (see <a href="#fireqos-interface5">fireqos-interface(5)</a>).</p>
+    <p>Writing <code>class4</code> includes only IPv4 traffic in the class.</p>
+    <p>Writing <code>class6</code> includes only IPv6 traffic in the class.</p>
+    <p>Writing <code>class46</code> includes both IPv4 and IPv6 traffic in the class.</p>
+    <p>The actual traffic to be matched by a class is defined by adding matches. See <a href="#fireqos-match5">fireqos-match(5)</a>.</p>
+    <p>The sequence that classes appear in the configuration defines their priority. The first class is the most important one. Unless otherwise limited it will get all available bandwidth if it needs to.</p>
+    <p>The second class is less important than the first, the third is even less important than the second, etc. The idea is very simple: just put the classes in the order of importance to you.</p>
+    <p>Classes can have their priority assigned explicitly with the <code>prio</code> parameter. See <a href="#prio-class">fireqos-params-class(5)</a>.</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>The underlying Linux qdisc used by FireQOS, HTB, supports only 8 priorities, from 0 to 7. If you use more than 8 priorities, all after the 8th will get the same priority (<code>prio</code> 7).</p>
+    </blockquote>
+    <p>All classes in FireQOS share the <code>interface</code> bandwidth. However, every class has a <em>committed</em> rate (the minimum guaranteed speed it will get if it needs to) and a <em>ceiling</em> (the maximum rate this class can reach, provided there is capacity available and even if there is spare).</p>
+    <p>Classes may be nested to any level by using the <code>class group</code> syntax.</p>
+    <p>By default FireQOS creates nested classes as <em>classes directly attached to their parent class</em>. This way, nesting does not add any delays.</p>
+    <p>FireQOS can also <em>emulate new hardware</em> at the <code>group class</code> level. This may be needed, when for example you have an ADSL router that you connect to via Ethernet: you want the LAN traffic to be at Ethernet speed, but WAN traffic at ADSL speed with proper ADSL overheads calculation.</p>
+    <p>To accomplish hardware emulation nesting, you add a <code>linklayer</code> definition (<code>ethernet</code>, <code>adsl</code>, <code>atm</code>, etc.), or just an <code>mtu</code> to the <code>group class</code>. FireQOS will create a qdisc within the class, where the linklayer parameters will be assigned and the child classes will be attached to this qdisc. This adds some delay to the packets of the child classes, but allows you to emulate new hardware. For linklayer options, see <a href="#fireqos-params-class5">fireqos-params-class(5)</a>.</p>
+    <p>There is special class, called <code>default</code>. Default classes can be given explicitly in the configuration file. If they are not found in the config, FireQOS will append one at the end of each <code>interface</code> or <code>class group</code>.</p>
+    <h4 id="parameters-1">
+      <a href="#TOC">PARAMETERS</a>
+    </h4>
+    <dl>
+      <dt>
+        <code>group</code>      </dt>
+      <dd>
+        <p>It is possible to nest classes by using a group. Grouped classes must be closed with the <code>class group end</code> command.</p>
+      </dd>
+      <dt>
+        <em>name</em>
+      </dt>
+      <dd>
+        <p>This is a single-word name for this class and is used for displaying status information.</p>
+      </dd>
+      <dt>
+        <em>optional-class-params</em>
+      </dt>
+      <dd>
+        <p>The set of optional class parameters to apply to this class.</p>
+        <p>The following optional class parameters are inherited from the <code>interface</code> the class is in:</p>
+        <ul>
+          <li>
+            <code>ceil</code>          </li>
+          <li>
+            <code>burst</code>          </li>
+          <li>
+            <code>cburst</code>          </li>
+          <li>
+            <code>quantum</code>          </li>
+          <li>
+            <code>qdisc</code>          </li>
+        </ul>
+        <p>If you define one of these at the interface level, then all classes within the interface will get the value by default. These values can be overwritten by defining the parameter on the class too.</p>
+        <p>Optional class parameters not in the above list are <em>not</em> inherited from interfaces.</p>
+      </dd>
+    </dl>
+    <h4 id="examples-1">
+      <a href="#TOC">EXAMPLES</a>
+    </h4>
+    <p>To create a nested class, called servers, containing http and smtp:</p>
+    <pre><code>interface eth0 lan input rate 1Gbit
+  class voip commit 1Mbit
+    match udp ports 5060,10000:10100
+
+  class group servers commit 50%  # define the parent class
+    match tcp                     # apply to all child classes
+
+    class mail commit 50%         # 50% of parent ('servers')
+      match port 25               # matches within parent ('servers')
+
+    class web commit 50%
+      match port 80
+  class group end                 # end the group 'servers'
+
+  class streaming commit 30%</code></pre>
+    <p>To create a nested class which emulates an ADSL modem:</p>
+    <pre><code>
+interface eth0 lan output rate 1Gbit ethernet
+  class lan
+    match dst 192.168.0.0/24 # LAN traffic
+
+  class group adsl rate 10Mbit ceil 10Mbit adsl remote pppoe-llc
+    match all # all non-lan traffic in this emulated hardware group
+
+    class voip # class within adsl
+      match udp port 5060
+
+    class web # class within adsl
+      match tcp port 80,443
+  class group end</code></pre>
+    <h4 id="see-also-3">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos-params-class5">fireqos-params-class(5)</a> - QOS class parameters</li>
+      <li><a href="#fireqos1">fireqos(1)</a> - FireQOS program</li>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li><a href="#fireqos-interface5">fireqos-interface(5)</a> - QOS interface definition</li>
+      <li><a href="#fireqos-match5">fireqos-match(5)</a> - QOS traffic match</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+    </ul>
+    <p></p>
+    <h3 id="fireqos-match5">
+      <a href="#TOC">fireqos-match(5)</a>
+    </h3>
+    <h4 id="name-4">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-match - QOS traffic match</p>
+    <h4 id="synopsis-3">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>{match|match4|match6|match46} <em>optional-match-params</em></p>
+<!--
+extra-manpage: fireqos-match46.5
+extra-manpage: fireqos-match4.5
+extra-manpage: fireqos-match6.5
+  -->
+    <h4 id="description-4">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>Writing <code>match</code> inherits the IPv4/IPv6 version from its enclosing class (see <a href="#fireqos-class5">fireqos-class(5)</a>).</p>
+    <p>Writing <code>match4</code> includes only IPv4 traffic in the match.</p>
+    <p>Writing <code>match6</code> includes only IPv6 traffic in the match.</p>
+    <p>Writing <code>match46</code> includes both IPv4 and IPv6 traffic in the match.</p>
+    <p>You can add as many <code>match</code> statements as you like to a FireQOS configuration. They assign traffic to a class: by default to the class after which they are declared.</p>
+    <p>The sequence that matches appear in the configuration defines their priority, with the first match being given a <code>prio</code> of 10, with 10 added for each subsequent match (10, 20, 30, ...).</p>
+    <p>Matches can have their priority assigned explicitly with the <code>prio</code> parameter. See <a href="#prio-match">fireqos-params-match(5)</a>.</p>
+    <p>If one <code>match</code> statement generates multiple tc(8) <code>filter</code> statements, all filters generated by the same <code>match</code> statement will have the same <code>prio</code>.</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p><code>match</code> rules are attached to the parent of the <code>class</code> they appear in. Within the configuration they are written under a class, but in reality they are attached to their class parent, so that they classify the parent's traffic that they match, into the class.</p>
+    </blockquote>
+    <p>It is also possible to group all <code>match</code> statements together below the classes. This allows them to be arranged in preferred order, without the need for any explicit <code>prio</code> parameters. In this case however, each match statement must specify to which class it classifies the packets it matches, using the <code>class</code> parameter. See <a href="#class">fireqos-params-match(5)</a> and the examples below.</p>
+    <h4 id="parameters-2">
+      <a href="#TOC">PARAMETERS</a>
+    </h4>
+    <dl>
+      <dt>
+        <em>optional-match-params</em>
+      </dt>
+      <dd>The set of optional parameters which describe this match. See <a href="#fireqos-params-match5">fireqos-params-match(5)</a>.
+</dd>
+    </dl>
+    <h4 id="examples-2">
+      <a href="#TOC">EXAMPLES</a>
+    </h4>
+    <p>Match traffic within classes:</p>
+    <pre><code>    interface eth0 lan output rate 1Gbit
+      class voip
+        match udp ports 5060,10000:10100
+      class dns
+        match udp port 53
+      class mail
+        match tcp port 25</code></pre>
+    <p>Matches split out and explicitly assigning traffic to classes (N.B. without the <code>class</code> parameters, all traffic would be classified into 'mail'):</p>
+    <pre><code>    interface eth0 lan output rate 1Gbit
+      class voip
+      class dns
+      class mail
+
+      match udp ports 5060,10000:10100 class voip
+      match tcp port 25 class mail
+      match tcp port 80 class web</code></pre>
+    <h4 id="see-also-4">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos-params-match5">fireqos-params-match(5)</a> - QOS match parameters</li>
+      <li><a href="#fireqos1">fireqos(1)</a> - FireQOS program</li>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li><a href="#fireqos-interface5">fireqos-interface(5)</a> - QOS interface definition</li>
+      <li><a href="#fireqos-class5">fireqos-class(5)</a> - QOS class definition</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+      <li><a href="http://lartc.org/manpages/tc.html">tc(8)</a> - show / manipulate traffic control settings</li>
+    </ul>
+    <p></p>
+    <h2 id="optional-parameters-for-fireqos-commands">
+      <a href="#TOC">Optional Parameters for FireQOS Commands</a>
+    </h2>
+    <h3 id="fireqos-params5">
+      <a href="#TOC">fireqos-params(5)</a>
+    </h3>
+    <h4 id="name-5">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-params - shared class/match parameters</p>
+    <h4 id="synopsis-4">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>prio</p>
+    <p>priority</p>
+<!--
+extra-manpage: fireqos-prio.5
+extra-manpage: fireqos-priority.5
+  -->
+    <h4 id="description-5">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>Some optional parameter names are the same for both <code>class</code> and <code>match</code>. This page exists as a placeholder to help you find the appropriate documentation.</p>
+    <p>If you are searching for FireQOS parameters in general, see both <a href="#fireqos-params-class5">fireqos-params-class(5)</a> and/or <a href="#fireqos-params-match5">fireqos-params-match(5)</a> depending upon your need.</p>
+    <dl>
+      <dt>prio</dt>
+      <dd>
+        <p>For the <code>class</code> version, see <a href="#prio-class">fireqos-params-class(5)</a>.</p>
+        <p>For the <code>match</code> version, see <a href="#prio-match">fireqos-params-match(5)</a>.</p>
+      </dd>
+      <dt>priority</dt>
+      <dd>
+        <p>For the <code>class</code> version, see <a href="#priority-balanced">fireqos-params-match(5)</a>.</p>
+        <p>For the <code>match</code> version, see <a href="#tos-priority">fireqos-params-class(5)</a>.</p>
+      </dd>
+    </dl>
+    <h4 id="see-also-5">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos-params-class5">fireqos-params-class(5)</a> - QOS class parameters</li>
+      <li><a href="#fireqos-params-match5">fireqos-params-match(5)</a> - QOS match parameters</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+    </ul>
+    <p></p>
+    <h3 id="fireqos-params-class5">
+      <a href="#TOC">fireqos-params-class(5)</a>
+    </h3>
+    <h4 id="name-6">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-params-class - optional class parameters</p>
+<!--
+extra-manpage: fireqos-class-params.5
+extra-manpage: fireqos-rate.5
+extra-manpage: fireqos-commit.5
+extra-manpage: fireqos-min.5
+extra-manpage: fireqos-ceil.5
+extra-manpage: fireqos-max.5
+extra-manpage: fireqos-minrate.5
+extra-manpage: fireqos-qdisc.5
+extra-manpage: fireqos-pfifo.5
+extra-manpage: fireqos-bfifo.5
+extra-manpage: fireqos-sfq.5
+extra-manpage: fireqos-fq_codel.5
+extra-manpage: fireqos-codel.5
+extra-manpage: fireqos-none.5
+extra-manpage: fireqos-linklayer.5
+extra-manpage: fireqos-ethernet.5
+extra-manpage: fireqos-atm.5
+extra-manpage: fireqos-adsl.5
+extra-manpage: fireqos-mpu.5
+extra-manpage: fireqos-mtu.5
+extra-manpage: fireqos-tsize.5
+extra-manpage: fireqos-overhead.5
+extra-manpage: fireqos-r2q.5
+extra-manpage: fireqos-burst.5
+extra-manpage: fireqos-cburst.5
+extra-manpage: fireqos-quantum.5
+extra-manpage: fireqos-balanced.5
+  -->
+    <h4 id="synopsis-5">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>rate | commit | min <em>speed</em></p>
+    <p>ceil | max <em>speed</em></p>
+    <p>minrate <em>speed</em></p>
+    <p>{ qdisc <em>qdisc-name</em> | pfifo|bfifo|sfq|fq_codel|codel|none } [options "<em>qdisc-options</em>"]</p>
+    <p>prio { 0..7 | keep | last }</p>
+    <p>{ linklayer <em>linklayer-name</em> } | { adsl {local|remote} <em>encapsulation</em> } | ethernet | atm</p>
+    <p>mtu <em>bytes</em></p>
+    <p>mpu <em>bytes</em></p>
+    <p>tsize <em>size</em></p>
+    <p>overhead <em>bytes</em></p>
+    <p>r2q <em>factor</em></p>
+    <p>burst <em>bytes</em></p>
+    <p>cburst <em>bytes</em></p>
+    <p>quantum <em>bytes</em></p>
+    <p>priority | balanced</p>
+    <h4 id="description-6">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>All of the options apply to <code>interface</code> and <code>class</code> statements.</p>
+    <p>Units for speeds are defined in <a href="#fireqos.conf5">fireqos.conf(5)</a>.</p>
+    <h5 id="rate-commit-min">
+      <a href="#TOC">rate, commit, min</a>
+    </h5>
+    <p>When a committed rate of <em>speed</em> is provided to a class, it means that the bandwidth will be given to the class when it needs it. If the class does not need the bandwidth, it will be available for any other class to use.</p>
+    <blockquote>
+      <p>For interfaces, a rate must be defined.</p>
+    </blockquote>
+    <blockquote>
+      <p>For classes the rate defaults to 1/100 of the interface capacity.</p>
+    </blockquote>
+    <h4 id="ceil-max">
+      <a href="#TOC">ceil, max</a>
+    </h4>
+    <p>Defines the maximum <em>speed</em> a class can use. Even there is available bandwidth, a class will not exceed its ceil speed.</p>
+    <p>For interfaces, the default is the <code>rate</code> speed of the interface.</p>
+    <p>For classes, the defaults is the <code>ceil</code> of the their interfaces.</p>
+    <h5 id="minrate">
+      <a href="#TOC">minrate</a>
+    </h5>
+    <p>Defines the default committed <em>speed</em> for all classes not specifically given a rate in the config file. It forces a recalculation of tc(8) r2q.</p>
+    <p>When minrate is not given, FireQOS assigns a default value of 1/100 of the interface <code>rate</code>.</p>
+    <h5 id="qdisc-qdisc-name-pfifo-bfifo-sfq-fq_codel-codel-none">
+      <a href="#TOC">qdisc <em>qdisc-name</em>, pfifo, bfifo, sfq, fq_codel, codel, none</a>
+    </h5>
+    <p>The qdisc defines the method to distribute class bandwidth to its sockets. It is applied within the class itself and is useful in cases where a class gets saturated. For information about these, see the <a href="http://www.tldp.org/HOWTO/Traffic-Control-HOWTO/classless-qdiscs.html">Traffic Control Howto</a></p>
+    <p>A qdisc is only useful when applied to a class. It can be specified at the interface level in order to set the default for all of the included classes.</p>
+    <p>To pass options to a qdisc, you can specify them through an environment variable or explicitly on each class.</p>
+    <p>Set the variable FIREQOS_DEFAULT_QDISC_OPTIONS_qdiscname in the config file. For example, for sfq:</p>
+    <pre><code>FIREQOS_DEFAULT_QDISC_OPTIONS_sfq="perturb 10 quantum 2000".</code></pre>
+    <p>Using this variable each sfq will get these options by default. You can still override this by specifying explicit <code>options</code> for individual qdiscs, for example to add some <code>sfq</code> options you would write:</p>
+    <pre><code>class classname sfq options "perturb 10 quantum 2000"</code></pre>
+    <p>The <code>options</code> keyword must appear just after the qdisc name.</p>
+    <h5 id="prio-class">
+      <a href="#TOC">prio (class)</a>
+    </h5>
+    <blockquote>
+      <p>
+        <em>Note</em>
+      </p>
+      <p>There is also a match parameter called <code>prio</code>, see <a href="#prio-match">fireqos-params-match(5)</a>.</p>
+    </blockquote>
+    <p>HTB supports 8 priorities, from 0 to 7. Any number less than 0 will give priority 0. Any number above 7 will give priority 7.</p>
+    <p>By default, FireQOS gives the first class priority 0, and increases this number by 1 for each class it encounters in the config file. If there are more than 8 classes, all classes after the 8th will get priority 7. In <code>balanced</code> mode (see <a href="#priority-balanced">balanced</a>, below), all classes will get priority 4 by default.</p>
+    <p>FireQOS restarts priorities for each interface and class group.</p>
+    <p>The class priority defines how the spare bandwidth is spread among the classes. Classes with higher priorities (lower <code>prio</code>) will get all spare bandwidth. Classes with the same priority will get a percentage of the spare bandwidth, proportional to their committed rates.</p>
+    <p>The keywords <code>keep</code> and <code>last</code> will make a class use the priority of the class just above / before it. So to make two consecutive classes have the same prio, just add <code>prio keep</code> to the second one.</p>
+    <h5 id="linklayer-linklayer-name-ethernet-atm">
+      <a href="#TOC">linklayer <em>linklayer-name</em>, ethernet, atm</a>
+    </h5>
+    <p>The <code>linklayer</code> can only be given on interfaces. It is used by the kernel to calculate the overheads in the packets.</p>
+    <h5 id="adsl">
+      <a href="#TOC">adsl</a>
+    </h5>
+    <p><code>adsl</code> is a special <code>linklayer</code> that automatically calculates ATM overheads for the link.</p>
+    <p><code>local</code> is used when the ADSL modem is directly attached to your computer (for example a PCI card, or a USB modem).</p>
+    <p><code>remote</code> is used when you have an ADSL router attached to an ethernet port of your computer.</p>
+    <p>When one is using PPPoE pass-through, so there is an ethernet ADSL modem (not router) and PPP is running on the Linux host, the option to choose is <code>local</code>.</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>This special case has not yet been demonstrated for sure. Experiment a bit and if you find out, let us know to update this page. In practice, this parameter lets the kernel know that the packets it sees, have already an ethernet header on them.</p>
+    </blockquote>
+    <p><em>encapsulation</em> can be one of (all the labels on the same line are aliases):</p>
+    <ul>
+      <li>IPoA-VC/Mux or ipoa-vcmux or ipoa-vc or ipoa-mux,</li>
+      <li>IPoA-LLC/SNAP or ipoa-llcsnap or ipoa-llc or ipoa-snap</li>
+      <li>Bridged-VC/Mux or bridged-vcmux or bridged-vc or bridged-mux</li>
+      <li>Bridged-LLC/SNAP or bridged-llcsnap or bridged-llc or bridged-snap</li>
+      <li>PPPoA-VC/Mux or pppoa-vcmux or pppoa-vc or pppoa-mux</li>
+      <li>PPPoA-LLC/SNAP or pppoa-llcsnap or pppoa-llc or pppoa-snap</li>
+      <li>PPPoE-VC/Mux or pppoe-vcmux or pppoe-vc or pppoe-mux</li>
+      <li>PPPoE-LLC/SNAP or pppoe-llcsnap or pppoe-llc or pppoe-snap</li>
+    </ul>
+    <p>If your adsl router can give you the mtu, it would be nice to add an <code>mtu</code> parameter too. For detailed info, see <a href="http://ace-host.stuart.id.au/russell/files/tc/tc-atm/">here</a>.</p>
+    <h5 id="mtu">
+      <a href="#TOC">mtu</a>
+    </h5>
+    <p>Defines the MTU of the interface in <em>bytes</em>.</p>
+    <p>FireQOS will query the interface to find its MTU. You can overwrite this behaviour by giving this parameter to a class or interface.</p>
+    <h5 id="mpu">
+      <a href="#TOC">mpu</a>
+    </h5>
+    <p>Defines the MPU of the interface in <em>bytes</em>.</p>
+    <p>FireQOS does not set a default value. You can set your own using this parameter.</p>
+    <h5 id="tsize">
+      <a href="#TOC">tsize</a>
+    </h5>
+    <p>FireQOS does not set a default <em>size</em>. You can set your own using this parameter.</p>
+    <h5 id="overhead">
+      <a href="#TOC">overhead</a>
+    </h5>
+    <p>FireQOS automatically calculates the <em>bytes</em> <code>overhead</code> for ADSL. For all other technologies, you can specify the overhead in the config file.</p>
+    <h5 id="r2q">
+      <a href="#TOC">r2q</a>
+    </h5>
+    <p>FireQOS calculates the proper r2q <em>factor</em>, so that you can control speeds in steps of 1/100th of the interface speed (if that is possible).</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>The HTB manual states that this parameter is ignored when a quantum have been set. By default, FireQOS sets quantum to interface MTU, so <code>r2q</code> is probably is ignored by the kernel.</p>
+    </blockquote>
+    <h5 id="burst">
+      <a href="#TOC">burst</a>
+    </h5>
+    <p><code>burst</code> specifies the number of <em>bytes</em> that will be sent at once, at ceiling speed, when a class is allowed to send traffic. It is like a 'traffic unit'. A class is allowed to send at least <code>burst</code> bytes before trying to serve any other class.</p>
+    <p><code>burst</code> should never be lower that the interface mtu and class groups and interfaces should never have a smaller <code>burst</code> value than their children. If you do specify a higher <code>burst</code> for a child class, its parent may get stuck sometimes (the child will drain the parent).</p>
+    <p>By default, FireQOS lets the kernel decide this parameter, which calculates the lowest possible value (the minimum value depends on the rate of the interface and the clock speed of the CPU).</p>
+    <p><code>burst</code> is inherited from interfaces to classes and from group classes to their subclasses. FireQOS will not allow you to set a <code>burst</code> at a subclass, higher than its parent. Setting a <code>burst</code> of a subclass higher than its parent will drain the parent class, which may be stuck for up to a minute when this happens. For this check to work, FireQOS uses just its configuration (it does not query the kernel to check how the value specified in the config file for a subclass relates to the actual value of its parent).</p>
+    <h5 id="cburst">
+      <a href="#TOC">cburst</a>
+    </h5>
+    <p><code>cburst</code> is like <code>burst</code>, but at hardware speed (not just ceiling speed).</p>
+    <p>By default, FireQOS lets the kernel decide this parameter.</p>
+    <p><code>cburst</code> is inherited from interfaces to classes and from group classes to their subclasses. FireQOS will not allow you to set a <code>cburst</code> at a subclass, higher to its parent. Setting a <code>cburst</code> of a subclass higher than its parent, will drain the parent class, which may be stuck for up to a minute when this happens. For this check to work, FireQOS uses just its configuration (it does not query the kernel to check how the value specified in the config file for a subclass relates to the actual value of its parent).</p>
+    <h5 id="quantum">
+      <a href="#TOC">quantum</a>
+    </h5>
+    <p><code>quantum</code> specifies the number of <em>bytes</em> a class is allowed to send at once, when it is borrowing spare bandwidth from other classes.</p>
+    <p>By default, FireQOS sets <code>quantum</code> to the interface mtu.</p>
+    <p><code>quantum</code> is inherited from interfaces to classes and from group classes to their subclasses.</p>
+    <h5 id="priority-balanced">
+      <a href="#TOC">priority, balanced</a>
+    </h5>
+    <p>These parameters set the priority mode of the child classes.</p>
+    <dl>
+      <dt>
+        <code>priority</code>      </dt>
+      <dd>
+        <p><code>priority</code> is the default mode, where FireQOS assigns an incremental priority to each class. In this mode, the first class takes <code>prio 0</code>, the second <code>prio 1</code>, etc. When a class has a higher prio than the others (higher = smaller number), this high priority class will get all the spare bandwidth available, when it needs it. Spare bandwidth will be allocate to lower priority classes only when the higher priority ones do not need it.</p>
+      </dd>
+      <dt>
+        <code>balanced</code>      </dt>
+      <dd>
+        <p><code>balanced</code> mode gives <code>prio 4</code> to all child classes. When multiple classes have the same <code>prio</code>, the spare bandwidth available is spread among them, proportionally to their committed rate. The value 4 can be overwritten by setting FIREQOS_BALANCED_PRIO at the top of the config file to the <code>prio</code> you want the balanced mode to assign for all classes.</p>
+      </dd>
+    </dl>
+    <p>The priority mode can be set in interfaces and class groups. The effect is the same. The classes that are defined as child classes, will get by default the calculated class <code>prio</code> based on the priority mode given.</p>
+    <p>These options affect only the default <code>prio</code> that will be assigned by FireQOS. The default is used only if you don't explicitly use a <code>prio</code> parameter on a class.</p>
+    <blockquote>
+      <p>
+        <em>Note</em>
+      </p>
+      <p>There is also a match parameter called <code>priority</code>, see <a href="#tos-priority">fireqos-params-match(5)</a>.</p>
+    </blockquote>
+    <h4 id="see-also-6">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos1">fireqos(1)</a> - FireQOS program</li>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li><a href="#fireqos-interface5">fireqos-interface(5)</a> - QOS interface definition</li>
+      <li><a href="#fireqos-class5">fireqos-class(5)</a> - QOS class definition</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+    </ul>
+    <p></p>
+    <h3 id="fireqos-params-match5">
+      <a href="#TOC">fireqos-params-match(5)</a>
+    </h3>
+    <h4 id="name-7">
+      <a href="#TOC">NAME</a>
+    </h4>
+    <p>fireqos-params-match - optional match parameters</p>
+<!--
+extra-manpage: fireqos-match-params.5
+extra-manpage: fireqos-at.5
+extra-manpage: fireqos-syn.5
+extra-manpage: fireqos-syns.5
+extra-manpage: fireqos-ack.5
+extra-manpage: fireqos-acks.5
+extra-manpage: fireqos-proto.5
+extra-manpage: fireqos-protocol.5
+extra-manpage: fireqos-tcp.5
+extra-manpage: fireqos-udp.5
+extra-manpage: fireqos-icmp.5
+extra-manpage: fireqos-gre.5
+extra-manpage: fireqos-ipv6.5
+extra-manpage: fireqos-tos.5
+extra-manpage: fireqos-priority.5
+extra-manpage: fireqos-mark.5
+extra-manpage: fireqos-port.5
+extra-manpage: fireqos-ports.5
+extra-manpage: fireqos-sport.5
+extra-manpage: fireqos-sports.5
+extra-manpage: fireqos-dport.5
+extra-manpage: fireqos-dports.5
+extra-manpage: fireqos-ip.5
+extra-manpage: fireqos-net.5
+extra-manpage: fireqos-host.5
+extra-manpage: fireqos-src.5
+extra-manpage: fireqos-dst.5
+extra-manpage: fireqos-prio.5
+  -->
+    <h4 id="synopsis-6">
+      <a href="#TOC">SYNOPSIS</a>
+    </h4>
+    <p>at { root | <em>name</em> }</p>
+    <p>class <em>name</em></p>
+    <p>syn|syns</p>
+    <p>ack|acks</p>
+    <p>{ proto|protocol <em>protocol</em> [,<em>protocol</em>...] } |tcp|udp|icmp|gre|ipv6</p>
+    <p>{ tos | priority } <em>tosid</em> [,<em>tosid</em>...]</p>
+    <p>mark <em>mark</em> [,<em>mark</em>...]</p>
+    <p>{ port | ports } <em>port</em>[:<em>range</em>] [ ,<em>port</em>[:<em>range</em>]... ]</p>
+    <p>{ sport | sports } <em>port</em>[:<em>range</em>] [ ,<em>port</em>[:<em>range</em>]... ]</p>
+    <p>{ dport | dports } <em>port</em>[:<em>range</em>] [ ,<em>port</em>[:<em>range</em>]... ]</p>
+    <p>{ ip | net | host } <em>net</em> [,<em>net</em>...]</p>
+    <p>src <em>net</em> [,<em>net</em>...]</p>
+    <p>dst <em>net</em> [,<em>net</em>...]</p>
+    <p>prio <em>id</em></p>
+    <h4 id="description-7">
+      <a href="#TOC">DESCRIPTION</a>
+    </h4>
+    <p>These options apply to <code>match</code> statements.</p>
+    <h5 id="at">
+      <a href="#TOC">at</a>
+    </h5>
+    <p>By default a <code>match</code> is attached to the parent of its parent class. For example, if its parent is a class directly under the interface, then the <code>match</code> is attached to the interface and is compared against all traffic of the interface. For nested classes, a <code>match</code> of a leaf, is attached to the parent class and is compared against all traffic of this parent class.</p>
+    <p>With the <code>at</code> parameter, a <code>match</code> can be attached any class. The <em>name</em> parameter should be a class name. The name <code>root</code> attaches the <code>match</code> to the interface.</p>
+    <h5 id="class">
+      <a href="#TOC">class</a>
+    </h5>
+    <p>Defines the <em>name</em> of the class that will get the packets matched by this <code>match</code>.</p>
+    <p>By default it is the name of the class the <code>match</code> statement appears under.</p>
+    <blockquote>
+      <p>
+        <em>Note</em>
+      </p>
+      <p>There is also a <code>class</code> definition for traffic, see <a href="#fireqos-class5">fireqos-class(5)</a>.</p>
+    </blockquote>
+    <h5 id="syn-syns">
+      <a href="#TOC">syn, syns</a>
+    </h5>
+    <p>Match TCP SYN packets. Note that the <code>tcp</code> parameter must be specified.</p>
+    <p>If the same match statement includes more protocols than TCP, then this match will work for the TCP packets (it will be silently ignored for all other protocols).</p>
+    <p>For example, syn is ignored when generating the UDP filter in the below:</p>
+    <pre><code>match tcp syn
+match proto tcp,udp syn</code></pre>
+    <h5 id="ack-acks">
+      <a href="#TOC">ack, acks</a>
+    </h5>
+    <p>Same as <code>syn</code>, but matching TCP ACK packets.</p>
+    <h5 id="proto-protocol-tcp-udp-icmp-gre-ipv6">
+      <a href="#TOC">proto, protocol, tcp, udp, icmp, gre, ipv6</a>
+    </h5>
+    <p>Match the <em>protocol</em> in the IP header.</p>
+    <h5 id="tos-priority">
+      <a href="#TOC">tos, priority</a>
+    </h5>
+    <p>Match to TOS field of ipv4 or the priority field of ipv6. The <em>tosid</em> can be a value/mask in any format tc(8) accepts, or one of the following:</p>
+    <ul>
+      <li>min-delay, minimize-delay, minimum-delay, low-delay, interactive</li>
+      <li>maximize-throughput, maximum-throughput, max-throughput, high-throughput, bulk</li>
+      <li>maximize-reliability, maximum-reliability, max-reliability, reliable</li>
+      <li>min-cost, minimize-cost, minimum-cost, low-cost, cheap, normal-service, normal</li>
+    </ul>
+    <blockquote>
+      <p>
+        <em>Note</em>
+      </p>
+      <p>There is also a class parameter called <code>priority</code>, see <a href="#priority-balanced">fireqos-params-class(5)</a>.</p>
+    </blockquote>
+    <h5 id="mark-qos">
+      <a href="#TOC">mark (QOS)</a>
+    </h5>
+    <p>Match an iptables(8) MARK. Matching iptables(8) MARKs does not work on input interfaces. You can use them only on output. The IFB devices that are used for shaping inbound traffic do not have any iptables hooks to allow matching MARKs. If you try it, FireQOS will attempt to do it, but currently you will get an error from the tc(8) command executed.</p>
+    <h5 id="ports-sports-dports">
+      <a href="#TOC">ports, sports, dports</a>
+    </h5>
+    <p>Match ports of the IP header. <code>ports</code> will create rules for matching source and destination ports (separate rules for each). <code>dports</code> matches destination ports, <code>sports</code> matches source ports.</p>
+    <h5 id="ip-net-host-src-dst">
+      <a href="#TOC">ip, net, host, src, dst</a>
+    </h5>
+    <p>Match IPs of the IP header. <code>ip</code>, <code>net</code> and <code>host</code> will create rules for matching source and destination IPs (separate rules for each). <code>src</code> matches source IPs and <code>dst</code> destination IPs.</p>
+    <blockquote>
+      <p>
+        <strong>Note</strong>
+      </p>
+      <p>If the class these matches appear in are IPv4, then only IPv4 IPs can be used. To override use <code>match6 ... src/dst *IPV6_IP*</code></p>
+      <p>Similarly, if the class is IPv6, then only IPv6 IPs can be used. To override use <code>match4 ... src/dst *IPV4_IP*</code>.</p>
+    </blockquote>
+    <p>You can mix IPv4 and IPv6 in any way you like. FireQOS supports inheritance, to figure out for each statement which is the default. For example:</p>
+    <pre><code>interface46 eth0 lan output rate 1Gbit # ipv4 and ipv6 enabled
+  class voip # ipv4 and ipv6 class, as interface is both
+    match udp port 53 # ipv4 and ipv6 rule, as class is both
+    match4 src 192.0.2.1 # ipv4 only rule
+    match6 src 2001:db8::1 # ipv6 only rule
+
+  class4 realtime # ipv4 only class
+    match src 198.51.100.1 # ipv4 only rule, as class is ipv4-only
+
+  class6 servers # ipv6 only class
+        match src 2001:db8::2 # ipv6 only rule, as class is ipv6-only</code></pre>
+    <p>To convert an IPv4 interface to IPv6, just replace <code>interface</code> with <code>interface6</code>. All the rules in that interface, will automatically inherit the new protocol. Of course, if you use IP addresses for matching packets, make sure they are IPv6 IPs too.</p>
+    <h5 id="prio-match">
+      <a href="#TOC">prio (match)</a>
+    </h5>
+    <blockquote>
+      <p>
+        <em>Note</em>
+      </p>
+      <p>There is also a class parameter called <code>prio</code>, see <a href="#prio-class">fireqos-params-class(5)</a>.</p>
+    </blockquote>
+    <p>All match statements are attached to the interface. They forward traffic to their class, but they are actually executed for all packets that are leaving the interface (note: input matches are actually output matches on an IFB device).</p>
+    <p>By default, the priority they are executed, is the priority they appear in the configuration file, i.e. the first match of the first class is executed first, then the rest matches of the first class in the sequence they appear, then the matches of the second class, etc.</p>
+    <p>It is sometimes necessary to control the order of matches. For example, when you want host 192.0.2.1 to be assigned the first class, except port tcp/1234 which should be assigned the second class. The following will <em>not</em> work:</p>
+    <pre><code>interface eth0 lan output rate 1Gbit
+  class high
+    match host 192.0.2.1
+
+  class low
+    match host 192.0.2.1 port 1234 # Will never match</code></pre>
+    <p>In this case, the first match is assigned priority 10 and the second priority 20. The second match will never match anything, since all traffic for the host is already matched by the first one.</p>
+    <p>Setting an explicit priority allows you to change the order in which the matches are executed. FireQOS gives priority 10 to the first match of every interface, 20 to the second match, 30 to the third match, etc. So the default is 10 x the sequence number. You can set <code>prio</code> to overwrite this number.</p>
+    <p>To force executing the second match before the first, just set a lower priority for it. For example, this will cause the desired behaviour:</p>
+    <pre><code>interface eth0 lan output rate 1Gbit
+  class high
+    match host 192.0.2.1
+
+  class low
+    match host 192.0.2.1 port 1234 prio 1 # Matches before host-only</code></pre>
+    <h4 id="see-also-7">
+      <a href="#TOC">SEE ALSO</a>
+    </h4>
+    <ul>
+      <li><a href="#fireqos1">fireqos(1)</a> - FireQOS program</li>
+      <li><a href="#fireqos.conf5">fireqos.conf(5)</a> - FireQOS configuration file</li>
+      <li><a href="#fireqos-match5">fireqos-match(5)</a> - QOS traffic match</li>
+      <li>
+        <a href="http://firehol.org/">FireHOL Website</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/firehol-manual.pdf">FireHOL Online PDF Manual</a>
+      </li>
+      <li>
+        <a href="http://firehol.org/manual">FireHOL Online HTML Manual</a>
+      </li>
+    </ul>
+    <p></p>
+<!--
+    This file lists internal references within the manual
+    and associates them with anchors in the output.
+
+    Note that the blank line after this comment is required, to keep
+    pandoc(1) happy when formatting.
+  -->
+<!--
+    This file lists keywords associated with the FireQOS configuration
+    language and associates them with anchors in the output.
+
+    Note that the blank line after this comment is required, to keep
+    pandoc(1) happy when formatting.
+  -->
+<!--
+    This file lists references used by the website and need to be maintained
+    within the document.
+
+    Note that the blank line after this comment is required, to keep
+    pandoc(1) happy when formatting.
+  -->
+  </body>
+</html>

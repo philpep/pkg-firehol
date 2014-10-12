@@ -4,8 +4,8 @@
 #
 #   Copyright
 #
-#       Copyright (C) 2003-2013 Costa Tsaousis <costa@tsaousis.gr>
-#       Copyright (C) 2012-2013 Phil Whineray <phil@sanewall.org>
+#       Copyright (C) 2003-2014 Costa Tsaousis <costa@tsaousis.gr>
+#       Copyright (C) 2012-2014 Phil Whineray <phil@sanewall.org>
 #
 #   License
 #
@@ -26,10 +26,10 @@
 #
 
 get_version() {
-	GIT_REF=' (HEAD, v2.0.0-rc.1, master),commit-2c8376b'
+	GIT_REF=' (HEAD, v2.0.0-rc.2, master),commit-a3b162c'
 	local IFS=":(), "
 	set -- "$GIT_REF"
-	ver='$Id: 51b78a0608ed6a255874b03034df53ed069d16a9 $'
+	ver='$Id: a21941faddd68deff02c7e790af6a799182e494a $'
 	for i in $@
 	do
 		case "$i" in
@@ -53,8 +53,8 @@ emit_version() {
 	${CAT_CMD} <<EOF
 
 FireHOL $VERSION
-(C) Copyright 2003-2013 Costa Tsaousis <costa@tsaousis.gr>
-(C) Copyright 2012-2013 Phil Whineray <phil@firehol.org>
+(C) Copyright 2003-2014 Costa Tsaousis <costa@tsaousis.gr>
+(C) Copyright 2012-2014 Phil Whineray <phil@firehol.org>
 FireHOL is distributed under the GPL v2+.
 Home Page: http://firehol.org
 
@@ -182,7 +182,6 @@ require_cmd() {
 # Currently the following commands are required only when needed.
 # (i.e. Command on Demand)
 #
-# wget or curl (either is fine)
 # zcat or gzcat or gzip (either or none is fine)
 # less or more (either or none is fine)
 # ip
@@ -207,6 +206,7 @@ which_cmd HEAD_CMD head
 which_cmd TAIL_CMD tail
 which_cmd LSMOD_CMD lsmod
 which_cmd MKDIR_CMD mkdir
+which_cmd MKTEMP_CMD mktemp
 which_cmd MV_CMD mv
 which_cmd RM_CMD rm
 which_cmd SED_CMD sed
@@ -288,26 +288,6 @@ zcat_cmd() {
 	echo >&2 " Make sure you have one of these available in the system path."
 	echo >&2 " "
 	
-	return 1
-}
-
-# Fetch a URL and output it to the standard output.
-wget_cmd() {
-	local url="${1}"
-	
-	require_cmd wget curl
-	
-	if [ ! -z "${WGET_CMD}" ]
-	then
-		${WGET_CMD} -O - "${url}" 2>/dev/null
-		return $?
-	elif [ ! -z "${CURL_CMD}" ]
-	then
-		${CURL_CMD} -s "${url}"
-		return $?
-	fi
-	
-	error "Cannot use either 'wget' or 'curl' to fetch '${url}'."
 	return 1
 }
 
@@ -425,7 +405,7 @@ fi
 # Directories and files
 
 # Create an empty temporary directory we need for this run.
-if ! FIREHOL_DIR="`mktemp -d -t firehol-XXXXXXXXXX`"
+if ! FIREHOL_DIR="`${MKTEMP_CMD} -d -t firehol-XXXXXXXXXX`"
 then
             echo >&2
             echo >&2
@@ -595,25 +575,10 @@ then
 	"${CHMOD_CMD}" 700 "${FIREHOL_CONFIG_DIR}/services"
 fi
 
-# Remove any old directories that might be there.
-if [ -d "${FIREHOL_DIR}" ]
-then
-	"${RM_CMD}" -rf "${FIREHOL_DIR}"
-	if [ $? -ne 0 -o -e "${FIREHOL_DIR}" ]
-	then
-		echo >&2
-		echo >&2
-		echo >&2 "Cannot clean temporary directory '${FIREHOL_DIR}'."
-		echo >&2
-		exit 1
-	fi
-fi
-"${MKDIR_CMD}" "${FIREHOL_DIR}"					|| exit 1
-"${MKDIR_CMD}" "${FIREHOL_CHAINS_DIR}"			|| exit 1
-"${MKDIR_CMD}" "${FIREHOL_DIR}/fast"			|| exit 1
-"${MKDIR_CMD}" "${FIREHOL_DIR}/fast/tables"		|| exit 1
-"${MKDIR_CMD}" "${FIREHOL_DIR}/fast/table6s"		|| exit 1
-
+"${MKDIR_CMD}" "${FIREHOL_CHAINS_DIR}" || exit 1
+"${MKDIR_CMD}" "${FIREHOL_DIR}/fast" || exit 1
+"${MKDIR_CMD}" "${FIREHOL_DIR}/fast/tables"	|| exit 1
+"${MKDIR_CMD}" "${FIREHOL_DIR}/fast/table6s" || exit 1
 
 # prepare the file that will hold all modules to be loaded.
 # this is needed only when we are going to save the firewall
@@ -2073,7 +2038,7 @@ rules_nfs() {
 	local x=
 	for x in ${servers}
 	do
-		local tmp="${FIREHOL_DIR}/firehol.rpcinfo.$$.${RANDOM}"
+		local tmp="`${MKTEMP_CMD} ${FIREHOL_DIR}/firehol-rpcinfo-XXXXXXXXXX`"
 		
 		set_work_function "Getting RPC information from server '${x}'"
 		
@@ -2192,7 +2157,7 @@ rules_nis() {
 	local x=
 	for x in ${servers}
 	do
-		local tmp="${FIREHOL_DIR}/firehol.rpcinfo.$$.${RANDOM}"
+		local tmp="`${MKTEMP_CMD} ${FIREHOL_DIR}/firehol-rpcinfo-XXXXXXXXXX)`"
 		
 		set_work_function "Getting RPC information from server '${x}'"
 		
@@ -2795,26 +2760,6 @@ fi
 ecn_shame() {
 	softwarning "ECN_SHAME IP list no longer available, helper is ignored."
 	return 0
-}
-
-# Fetch a URL and output it to the standard output.
-firehol_wget() {
-	local url="${1}"
-	
-	require_cmd wget curl
-	
-	if [ ! -z "${WGET_CMD}" ]
-	then
-		${WGET_CMD} -O - "${url}" 2>/dev/null
-		return $?
-	elif [ ! -z "${CURL_CMD}" ]
-	then
-		${CURL_CMD} -s "${url}"
-		return $?
-	fi
-	
-	error "Cannot use either 'wget' or 'curl' to fetch '${url}'."
-	return 1
 }
 
 # define custom actions
@@ -4089,19 +4034,24 @@ else
 	# We could not find a kernel configuration
 	
 	KERNEL_CONFIG=
-	echo >&2 " "
-	echo >&2 " IMPORTANT WARNING:"
-	echo >&2 " ------------------"
-	echo >&2 " FireHOL cannot find your current kernel configuration."
-	echo >&2 " Please, either compile your kernel with /proc/config,"
-	echo >&2 " or make sure there is a valid kernel config in:"
-	echo >&2 " /usr/src/linux/.config"
-	echo >&2 " "
-	echo >&2 " Because of this, FireHOL will simply attempt to load"
-	echo >&2 " all kernel modules for the services used, without"
-	echo >&2 " being able to detect failures."
-	echo >&2 " "
-	sleep 2
+
+	if [ ! ${FIREHOL_LOAD_KERNEL_MODULES} -eq 0 ]
+	then
+		echo >&2 " "
+		echo >&2 " IMPORTANT WARNING:"
+		echo >&2 " ------------------"
+		echo >&2 " FireHOL cannot find your current kernel configuration."
+		echo >&2 " Please, either compile your kernel with /proc/config,"
+		echo >&2 " or make sure there is a valid kernel config in:"
+		echo >&2 " /usr/src/linux/.config"
+		echo >&2 " "
+		echo >&2 " Because of this, FireHOL will simply attempt to load"
+		echo >&2 " all kernel modules for the services used, without"
+		echo >&2 " being able to detect failures."
+		echo >&2 " "
+		sleep 2
+	fi
+
 fi
 
 # activation-phase command to check for the existance of
@@ -7940,7 +7890,8 @@ EOF
 		echo "# TODO: Change \"if${i}\" to something with meaning to you."
 		echo "# TODO: Check the optional rule parameters (src/dst)."
 		echo "#       Remove 'dst ${ifip}' if this is dynamically assigned."
-		echo "interface ${iface} if${i} src ${ifnets} dst ${ifip}"
+		echo "#       To add IPv6, read http://firehol.org/upgrade/#config-version-6"
+		echo "interface4 ${iface} if${i} src ${ifnets} dst ${ifip}"
 		echo
 		echo "	# The default policy is DROP. You can be more polite with REJECT."
 		echo "	# Prefer to be polite on your own clients to prevent timeouts."
@@ -8223,13 +8174,20 @@ EOF
 				${TOUCH_CMD} "${FIREHOL_DIR}/keys/${key}"
 				
 				x=$[x + 1]
+				if [ $x -lt 10 ]
+				then
+					lx="0$x"
+				else
+					lx="$x"
+				fi
 				
 				echo
 				echo "# Router No ${x}."
 				echo "# Clients on ${inface} (from ${src}) accessing servers on ${outface} (to ${dst})."
-				echo "# TODO: Change \"router${x}\" to something with meaning to you."
+				echo "# TODO: Change \"router${lx}\" to something with meaning to you."
 				echo "# TODO: Check the optional rule parameters (src/dst)."
-				echo "router router${x} inface ${inface} outface ${outface} src ${src} dst ${dst}"
+				echo "#       To add IPv6, read http://firehol.org/upgrade/#config-version-6"
+				echo "router4 router${lx} inface ${inface} outface ${outface} src ${src} dst ${dst}"
 				echo 
 				echo "	# If you don't trust the clients on ${inface} (from ${src}), or"
 				echo "	# if you want to protect the servers on ${outface} (to ${dst}),"
