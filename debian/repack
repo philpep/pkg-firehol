@@ -77,21 +77,9 @@ rm --verbose --force -- doc/service-links
 rm --verbose --force -- autotool/install-sh
 rm --verbose --force -- autotool/missing
 rmdir --verbose --ignore-fail-on-non-empty -- autotool
-rm --verbose --force -- sbin/Makfile.in
-rm --verbose --force -- etc/Makfile.in
-rm --verbose --force -- examples/Makfile.in
-rm --verbose --force -- doc/tools/Makfile.in
-rm --verbose --force -- doc/Makfile.in
-rm --verbose --force -- m4/Makfile.in
-rm --verbose --force -- packaging/Makfile.in
-rm --verbose --force -- Makefile.in
+find . -name 'Makefile.in' | xargs --no-run-if-empty rm --verbose --force
 rm --verbose --force -- aclocal.m4
 rm --verbose --force -- configure
-## mimic make clean up
-rm --verbose --force -- doc/firehol/tmp-html-combined.md
-rm --verbose --force -- doc/fireqos/tmp-html-combined.md
-rm --verbose --force -- doc/firehol/tmp-pdf-combined.md
-rm --verbose --force -- doc/fireqos/tmp-pdf-combined.md
 #:
 
 cd ${REPACK_WORKING_FOLDER}

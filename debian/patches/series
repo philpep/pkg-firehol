@@ -1,10 +1,2 @@
-upstream-version.patch
-upstream-wget.patch
-upstream-mktemp-mandatory.patch
-upstream-temporary_folder-rationalization.patch
-upstream-mktemp-use.patch
-upstream-load_kernel_modules-more_effective.patch
-upstream-concurrent_run_control-cleanup.patch
 upstream-lock_folder.patch
-debianization.patch
 debianization-fireqos.patch

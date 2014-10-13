@@ -8,7 +8,7 @@ Build-Depends:
  texlive-base, texlive-latex-recommended, texlive-fonts-recommended, lmodern,
  pandoc,
  kmod, iptables, iproute2, procps
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://firehol.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/firehol.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/firehol.git

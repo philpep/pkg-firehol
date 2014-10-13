@@ -22,7 +22,7 @@ Last-Update: 2014-08-06
  
  if [ -d "/var/spool" ]
  then
-@@ -596,6 +601,14 @@
+@@ -591,6 +596,14 @@
  EOFMTL
  
  

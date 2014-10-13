@@ -1,3 +1,15 @@
+firehol (2.0.0~rc.2+ds-1) experimental; urgency=medium
+
+  * New upstream major version:
+    - previous non-Debian-centric minor fixes were integrated, all of them
+      but the faulty `concurrent run' one.
+  * Debianization:
+    - debian/control:
+      - Standards Version, bump to 3.9.6 (no change);
+    - debian/repack, refresh.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Mon, 13 Oct 2014 00:24:54 +0000
+
 firehol (2.0.0~rc.1+ds-1) experimental; urgency=medium
 
   * New upstream major version:
