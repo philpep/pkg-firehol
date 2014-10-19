@@ -6,7 +6,7 @@ Last-Update: 2014-08-06
 
 --- a/sbin/firehol.in
 +++ b/sbin/firehol.in
-@@ -420,8 +420,13 @@
+@@ -427,8 +427,13 @@
  FIREHOL_TMP="${FIREHOL_DIR}/firehol-tmp.sh"
  
  # Redhat like status info for startup script
@@ -22,7 +22,7 @@ Last-Update: 2014-08-06
  
  if [ -d "/var/spool" ]
  then
-@@ -591,6 +596,14 @@
+@@ -598,6 +603,14 @@
  EOFMTL
  
  
