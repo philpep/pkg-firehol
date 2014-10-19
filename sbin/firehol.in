@@ -26,10 +26,10 @@
 #
 
 get_version() {
-	GIT_REF=' (HEAD, v2.0.0-rc.2, master),commit-a3b162c'
+	GIT_REF=' (HEAD, v2.0.0-rc.3, master),commit-58629cc'
 	local IFS=":(), "
 	set -- "$GIT_REF"
-	ver='$Id: a21941faddd68deff02c7e790af6a799182e494a $'
+	ver='$Id: e8d54061942d1d0d51a848edac31420ccd0a5cdf $'
 	for i in $@
 	do
 		case "$i" in
@@ -241,7 +241,11 @@ ENABLE_IPV6=1
 require_cmd -n ip6tables
 require_cmd -n ip6tables-save
 require_cmd -n ip6tables-restore
-if [ -z "${IP6TABLES_CMD}" ]
+if [ ! -f /proc/net/if_inet6 ]
+then
+	# IPv6 not in use on this system, silently ignore
+	ENABLE_IPV6=0
+elif [ -z "${IP6TABLES_CMD}" ]
 then
 	echo >&2 " WARNING: no ip6tables command: IPv6 disabled"
 	ENABLE_IPV6=0
@@ -377,11 +381,14 @@ then
 	ENABLE_IPV4=0
 fi
 
-${IP6TABLES_CMD} -nxvL >/dev/null 2>&1
-if [ $? -ne 0 ]
+if [ $ENABLE_IPV6 -eq 1 ]
 then
-	echo >&2 " WARNING: error initializing ip6tables: IPv6 disabled"
-	ENABLE_IPV6=0
+	${IP6TABLES_CMD} -nxvL >/dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo >&2 " WARNING: error initializing ip6tables: IPv6 disabled"
+		ENABLE_IPV6=0
+	fi
 fi
 
 if [ $ENABLE_IPV4 -eq 0 -a $ENABLE_IPV6 -eq 0 ]
@@ -4570,14 +4577,14 @@ rule_action_param() {
 						# to pass.
 						if [ "${do_accept_limit}" = "1" ]
 						then
-							local accept_limit_chain="`echo "ACCEPT LIMIT ${freq} ${burst} ${overflow}" | tr " /." "___"`"
+							local accept_limit_chain="`echo "ACC LIM ${freq} ${burst} ${overflow}" | tr " /." "___"`"
 							
 							# does the chain we need already exist?
-							if [ ! -f "${FIREHOL_CHAINS_DIR}/${accept_limit_chain}" ]
+							if [ ! -f "${FIREHOL_CHAINS_DIR}/${accept_limit_chain}.${iptables_cmd}" ]
 							then
 								# the chain does not exist. create it.
 								$iptables_cmd ${table} -N "${accept_limit_chain}"
-								touch "${FIREHOL_CHAINS_DIR}/${accept_limit_chain}"
+								touch "${FIREHOL_CHAINS_DIR}/${accept_limit_chain}.${iptables_cmd}"
 								
 								# first, if the traffic is not a NEW connection, allow it.
 								# doing this first will speed up normal traffic.
@@ -4640,14 +4647,14 @@ rule_action_param() {
 						# to pass.
 						if [ "${do_accept_recent}" = "1" ]
 						then
-							local accept_recent_chain="`echo "ACCEPT RECENT $name $seconds $hits" | tr " /." "___"`"
+							local accept_recent_chain="`echo "ACC REC $name $seconds $hits" | tr " /." "___"`"
 							
 							# does the chain we need already exist?
-							if [ ! -f "${FIREHOL_CHAINS_DIR}/${accept_recent_chain}" ]
+							if [ ! -f "${FIREHOL_CHAINS_DIR}/${accept_recent_chain}.${iptables_cmd}" ]
 							then
 								# the chain does not exist. create it.
 								$iptables_cmd ${table} -N "${accept_recent_chain}"
-								touch "${FIREHOL_CHAINS_DIR}/${accept_recent_chain}"
+								touch "${FIREHOL_CHAINS_DIR}/${accept_recent_chain}.${iptables_cmd}"
 								
 								# first, if the traffic is not a NEW connection, allow it.
 								# doing this first will speed up normal traffic.
@@ -4679,11 +4686,11 @@ rule_action_param() {
 						local -a action_param=()
 						
 						# does the knock chain exists?
-						if [ ! -f "${FIREHOL_CHAINS_DIR}/${name}" ]
+						if [ ! -f "${FIREHOL_CHAINS_DIR}/${name}.${iptables_cmd}" ]
 						then
 							# the chain does not exist. create it.
 							$iptables_cmd ${table} -N "${name}"
-							touch "${FIREHOL_CHAINS_DIR}/${name}"
+							touch "${FIREHOL_CHAINS_DIR}/${name}.${iptables_cmd}"
 							
 							$iptables_cmd -A "${name}" -m conntrack --ctstate ESTABLISHED -j ACCEPT
 							
@@ -8307,8 +8314,11 @@ firehol_filter_chains=
 firehol_filter6_chains=
 initialize_firewall() {
 	load_kernel_module ip_tables
-	load_kernel_module ip6_tables
 	load_kernel_module nf_conntrack
+	if [ $ENABLE_IPV6 -eq 1 ]
+	then
+		load_kernel_module ip6_tables
+	fi
 	
 	for m in ${FIREHOL_KERNEL_MODULES}
 	do
