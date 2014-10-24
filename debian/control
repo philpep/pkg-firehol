@@ -2,7 +2,7 @@ Source: firehol
 Section: net
 Priority: optional
 Maintainer: Jerome Benoit <calculus@rezozer.net>
-Build-Depends:
+Build-Depends-Indep:
  debhelper (>= 9), autotools-dev, dh-autoreconf,
  libxml2-utils,
  texlive-base, texlive-latex-recommended, texlive-fonts-recommended, lmodern,

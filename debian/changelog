@@ -1,13 +1,14 @@
 firehol (2.0.0+ds-1) unstable; urgency=medium
 
-  * New upstream version:
+  * New upstream (officially) stable version:
     - mark the first (officially) stable release of FireHOL with IPv6 support
       and including FireQOS to provide traffic management for humans;
     - no changes from ~rc.3.
   * Debianization:
+    - debian/control, revisit;
     - debian/watch, correct.
 
- -- Jerome Benoit <calculus@rezozer.net>  Fri, 24 Oct 2014 14:35:34 +0000
+ -- Jerome Benoit <calculus@rezozer.net>  Fri, 24 Oct 2014 14:54:12 +0000
 
 firehol (2.0.0~rc.3+ds-1) unstable; urgency=medium
 
