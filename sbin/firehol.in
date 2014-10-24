@@ -26,7 +26,7 @@
 #
 
 get_version() {
-	GIT_REF=' (HEAD, v2.0.0-rc.3, master),commit-58629cc'
+	GIT_REF=' (HEAD, v2.0.0, master),commit-30f2168'
 	local IFS=":(), "
 	set -- "$GIT_REF"
 	ver='$Id: e8d54061942d1d0d51a848edac31420ccd0a5cdf $'
