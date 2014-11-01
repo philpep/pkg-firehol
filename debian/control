@@ -17,7 +17,7 @@ Package: firehol
 Architecture: all
 Depends: ${misc:Depends}, lsb-base, kmod, iptables, iproute2, tcpdump, procps
 Recommends: fireqos (= ${binary:Version})
-Suggests: ulogd2
+Suggests: firehol-doc (= ${binary:Version}), ulogd2
 Description: easy to use but powerful iptables stateful firewall (program)
  FireHOL generates generic firewalls with an extremely simple but powerful
  configuration language based on bash, enabling you to design any kind of
@@ -31,6 +31,8 @@ Description: easy to use but powerful iptables stateful firewall (program)
 Package: firehol-doc
 Section: doc
 Architecture: all
+Replaces: firehol (<< 2.0.0)
+Breaks: firehol(<< 2.0.0)
 Depends: ${misc:Depends}
 Suggests: firehol (= ${binary:Version}), pdf-viewer, www-browser
 Description: easy to use but powerful iptables stateful firewall (docs)
@@ -47,6 +49,7 @@ Package: fireqos
 Architecture: all
 Depends: ${misc:Depends}, lsb-base, kmod, iproute2, tcpdump, procps
 Recommends: firehol (= ${binary:Version})
+Suggests: fireqos-doc (= ${binary:Version})
 Description: easy to use but powerful traffic shaping tool (program)
  FireQOS generates generic traffic shapers with an extremely simple but
  powerful configuration language based on bash, enabling you to design
