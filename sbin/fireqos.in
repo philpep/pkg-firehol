@@ -29,7 +29,7 @@
 export PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin"
 
 get_version() {
-	GIT_REF=' (v2.0.1, stable-v2),commit-85328ed'
+	GIT_REF=' (v2.0.2, stable-v2),commit-823f1f7'
 	local IFS=":(), "
 	set -- "$GIT_REF"
 	ver='$Id: 5493a9797474fc39defb2296219d2374a52f2df8 $'
