@@ -29,10 +29,10 @@
 export PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin"
 
 get_version() {
-	GIT_REF=' (v2.0.2, stable-v2),commit-823f1f7'
+	GIT_REF=' (tag: v2.0.3, stable-v2),commit-8a7193d'
 	local IFS=":(), "
 	set -- "$GIT_REF"
-	ver='$Id: 5493a9797474fc39defb2296219d2374a52f2df8 $'
+	ver='$Id: 34ff7df6a0f556d1cd76ea2265b1becbbbec37bf $'
 	for i in $@
 	do
 		case "$i" in
@@ -2846,6 +2846,7 @@ EOF
 	
 	getdata() {
 		eval "`$tc_cmd -s class show dev $1 | $tr_cmd "\n,()" "|   " | $sed_cmd \
+			-e "s/[^|]|class /||class /g"		\
 			-e "s/ \+/ /g"				\
 			-e "s/ *| */|/g"			\
 			-e "s/||/\n/g"				\
