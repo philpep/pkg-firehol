@@ -1,3 +1,9 @@
+firehol (2.0.3+ds-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Sun, 26 Apr 2015 13:55:25 +0000
+
 firehol (2.0.2+ds-2) unstable; urgency=medium
 
   * Debianization:
