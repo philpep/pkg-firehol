@@ -6,6 +6,11 @@
 
 firehol-masquerade - set up masquerading (NAT) on an interface
 
+<!--
+contents-table:subcommand:masquerade:keyword-firehol-masquerade:Y:inface outface:Change the source IP of packets leaving `outface`, with the IP of the interface they are using to leave.
+contents-table:helper:masquerade:keyword-firehol-masquerade:Y:-:Change the source IP of packets leaving `outface`, with the IP of the interface they are using to leave.
+  -->
+
 # SYNOPSIS
 
 masquerade *real-interface* *rule-params*
@@ -26,7 +31,7 @@ If used within an `interface` definition the definition's *real-interface*
 will be used.
 
 If used within a router definition the definition's `outface`(s) will be
-used, if specified. If the `reverse` option is gived, then the
+used, if specified. If the `reverse` option is given, then the
 definition's `inface`(s) will be used, if specified.
 
 Unlike most commands, `masquerade` does not inherit its parent
@@ -83,4 +88,4 @@ host has a static IP address you should generally prefer SNAT.
 * [firehol-nat(5)][] - nat, snat, dnat, redirect config helpers
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

@@ -6,6 +6,10 @@
 
 firehol-interface - interface definition
 
+<!--
+contents-table:primary:interface:keyword-firehol-interface:Y:inface outface physout:Define packet filtering blocks, protecting the firewall host itself.
+  -->
+
 # SYNOPSIS
 
 { interface | interface46 } *real-interface* *name* *rule-params*
@@ -15,6 +19,7 @@ interface4 *real-interface* *name* *rule-params*
 interface6 *real-interface* *name* *rule-params*
 
 <!--
+This comment ensures a manpage is created for each keyword
 extra-manpage: firehol-interface46.5
 extra-manpage: firehol-interface4.5
 extra-manpage: firehol-interface6.5
@@ -106,7 +111,7 @@ from those listed in [INTERFACE SUBCOMMANDS][].
 * [firehol-masquerade(5)][keyword-firehol-masquerade] - masquerade helper
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 
 ## Interface Subcommands
 

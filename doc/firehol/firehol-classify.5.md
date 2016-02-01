@@ -6,9 +6,17 @@
 
 firehol-classify - classify traffic for traffic shaping tools
 
+<!--
+contents-table:helper:classify:keyword-firehol-classify:Y:-:Put matching traffic into the specified traffic shaping class.
+  -->
+
 # SYNOPSIS
 
-classify *class* [*rule-params*]
+{ classify | classify46 } *class* [*rule-params*]
+
+classify4  *class* [*rule-params*]
+
+classify6  *class* [*rule-params*]
 
 # DESCRIPTION
 
@@ -40,5 +48,5 @@ declared before the first router or interface.
 * tc(8) - show / manipulate traffic control settings
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 * [Linux Advanced Routing & Traffic Control HOWTO](http://lartc.org/howto/)

@@ -7,7 +7,9 @@
 firehol-iptables - include custom iptables commands
 <!--
 extra-manpage: firehol-ip6tables.5
--->
+contents-table:subcommand:iptables ip6tables:keyword-firehol-iptables:N:*all forbidden*:A wrapper for the system iptables command, to add custom iptables statements to a FireHOL firewall.
+contents-table:helper:iptables ip6tables:keyword-firehol-ip6tables:N:*all forbidden*:A wrapper for the system iptables command, to add custom iptables statements to a FireHOL firewall.
+  -->
 
 # SYNOPSIS
 
@@ -44,4 +46,4 @@ in commands safely.
 * [ip6tables(8)](http://ipset.netfilter.org/ip6tables.man.html) - administration tool for IPv6 firewalls
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

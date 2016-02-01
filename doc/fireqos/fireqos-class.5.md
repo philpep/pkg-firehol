@@ -87,6 +87,7 @@ config, FireQOS will append one at the end of each `interface` or
 `group`
 :   It is possible to nest classes by using a group. Grouped classes
     must be closed with the `class group end` command.
+    Class groups can be nested.
 
 *name*
 :   This is a single-word name for this class and is used for displaying
@@ -107,9 +108,14 @@ config, FireQOS will append one at the end of each `interface` or
     If you define one of these at the interface level, then all classes
     within the interface will get the value by default. These values can
     be overwritten by defining the parameter on the class too.
+    The same inheritance works on class groups.
 
     Optional class parameters not in the above list are *not* inherited
     from interfaces.
+
+    FireQOS will by default `commit` 1/100th of the parent bandwidth
+    to each class. This can be overwritten per class by adding a
+    `commit` to the class, or adding a `minrate` at the parent.
 
 # EXAMPLES
 
@@ -160,5 +166,5 @@ interface eth0 lan output rate 1Gbit ethernet
 * [fireqos-interface(5)][keyword-fireqos-interface] - QOS interface definition
 * [fireqos-match(5)][keyword-fireqos-match] - QOS traffic match
 * [FireHOL Website](http://firehol.org/)
-* [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireQOS Online PDF Manual](http://firehol.org/fireqos-manual.pdf)
+* [FireQOS Online Documentation](http://firehol.org/documentation/)

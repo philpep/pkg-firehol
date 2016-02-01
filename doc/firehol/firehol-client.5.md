@@ -6,6 +6,10 @@
 
 firehol-client - client command
 
+<!--
+contents-table:subcommand:client:keyword-firehol-client:Y:sport dport:Allow access to a client running on the `interface` or the protected `router` hosts.
+  -->
+
 # SYNOPSIS
 
 { client | client46 } *service* *action* [*rule-params*]
@@ -83,4 +87,4 @@ client smtp accept log "mail packet" src 192.0.2.1
 * [firehol-router(5)][keyword-firehol-router] - router definition
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

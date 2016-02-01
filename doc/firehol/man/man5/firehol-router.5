@@ -1,0 +1,169 @@
+.TH "firehol\-router" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-router \- create a router definition
+.SH SYNOPSIS
+.PP
+{ router | router46 } \f[I]name\f[] \f[I]rule\-params\f[]
+.PP
+router4 \f[I]name\f[] \f[I]rule\-params\f[]
+.PP
+router6 \f[I]name\f[] \f[I]rule\-params\f[]
+.SH DESCRIPTION
+.PP
+A \f[C]router\f[] definition consists of a set of rules for traffic
+passing through the host running the firewall.
+.PP
+The default policy for router definitions is RETURN, meaning packets are
+not dropped by any particular router.
+Packets not matched by any router are dropped at the end of the
+firewall.
+.PP
+The behaviour of the defined router is controlled by adding subcommands
+from those listed in ROUTER SUBCOMMANDS.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+Writing \f[C]router4\f[] is equivalent to writing \f[C]ipv4\ router\f[]
+and ensures the defined router is created only in the IPv4 firewall
+along with any rules within it.
+.PP
+Writing \f[C]router6\f[] is equivalent to writing \f[C]ipv6\ router\f[]
+and ensures the defined router is created only in the IPv6 firewall
+along with any rules within it.
+.PP
+Writing \f[C]router46\f[] is equivalent to writing \f[C]both\ router\f[]
+and ensures the defined router is created in both the IPv4 and IPv6
+firewalls.
+Any rules within it will also be applied to both, unless they specify
+otherwise.
+.RE
+.SH PARAMETERS
+.TP
+.B \f[I]name\f[]
+This is a name for this router.
+You should use short names (10 characters maximum) without spaces or
+other symbols.
+.RS
+.PP
+A name should be unique for all FireHOL interface and router
+definitions.
+.RE
+.TP
+.B \f[I]rule\-params\f[]
+The set of rule parameters to further restrict the traffic that is
+matched to this router.
+.RS
+.PP
+See firehol\-params(5) for information on the
+parameters that can be used.
+Some examples:
+.IP
+.nf
+\f[C]
+router\ mylan\ inface\ ppp+\ outface\ eth0\ src\ not\ ${UNROUTABLE_IPS}
+
+router\ myrouter
+\f[]
+.fi
+.PP
+See firehol.conf(5) for an explanation of
+${UNROUTABLE_IPS}.
+.RE
+.SH WORKING WITH ROUTERS
+.PP
+Routers create stateful iptables(8) rules which match traffic in both
+directions.
+.PP
+To match some client or server traffic, the input/output interface or
+source/destination of the request must be specified.
+All \f[C]inface\f[]/\f[C]outface\f[] and \f[C]src\f[]/\f[C]dst\f[]
+firehol\-params(5) can be given on the router
+statement (in which case they will be applied to all subcommands for the
+router) or just within the subcommands of the router.
+.PP
+For example, to define a router which matches requests from any PPP
+interface and destined for eth0, and on this allowing HTTP servers (on
+eth0) to be accessed by clients (from PPP) and SMTP clients (from eth0)
+to access any servers (on PPP):
+.IP
+.nf
+\f[C]
+router\ mylan\ inface\ ppp+\ outface\ eth0
+\ \ server\ http\ accept
+\ \ client\ smtp\ accept
+\f[]
+.fi
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+The \f[C]client\f[] subcommand reverses any optional rule parameters
+passed to the \f[C]router\f[], in this case the \f[C]inface\f[] and
+\f[C]outface\f[].
+.RE
+.PP
+Equivalently, to define a router which matches all forwarded traffic and
+within the the router allow HTTP servers on eth0 to be accessible to PPP
+and any SMTP servers on PPP to be accessible from eth0:
+.IP
+.nf
+\f[C]
+router\ mylan
+\ \ server\ http\ accept\ inface\ ppp+\ outface\ eth0
+\ \ server\ smtp\ accept\ inface\ eth0\ outface\ ppp
+\f[]
+.fi
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+In this instance two \f[C]server\f[] subcommands are used since there
+are no parameters on the \f[C]router\f[] to reverse.
+Avoid the use of the \f[C]client\f[] subcommand in routers unless the
+inputs and outputs are defined as part of the \f[C]router\f[].
+.RE
+.PP
+Any number of routers can be defined and the traffic they match can
+overlap.
+Since the default policy is RETURN, any traffic that is not matched by
+any rules in one will proceed to the next, in order, until none are
+left.
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-params(5) \- optional rule parameters
+.IP \[bu] 2
+firehol\-modifiers(5) \- ipv4/ipv6 selection
+.IP \[bu] 2
+firehol\-interface(5) \- interface definition
+.IP \[bu] 2
+firehol\-iptables(5) \- iptables helper
+.IP \[bu] 2
+firehol\-masquerade(5) \- masquerade helper
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SS Router Subcommands
+.IP \[bu] 2
+firehol\-policy(5) \- policy command
+.IP \[bu] 2
+firehol\-protection(5) \- protection command
+.IP \[bu] 2
+firehol\-server(5) \- server, route commands
+.IP \[bu] 2
+firehol\-client(5) \- client command
+.IP \[bu] 2
+firehol\-group(5) \- group command
+.IP \[bu] 2
+firehol\-tcpmss(5) \- tcpmss helper
+.SH AUTHORS
+FireHOL Team.

@@ -21,6 +21,7 @@ extra-manpage: fireqos-icmp.5
 extra-manpage: fireqos-gre.5
 extra-manpage: fireqos-ipv6.5
 extra-manpage: fireqos-tos.5
+extra-manpage: fireqos-dscp.5
 extra-manpage: fireqos-priority.5
 extra-manpage: fireqos-mark.5
 extra-manpage: fireqos-port.5
@@ -35,6 +36,7 @@ extra-manpage: fireqos-host.5
 extra-manpage: fireqos-src.5
 extra-manpage: fireqos-dst.5
 extra-manpage: fireqos-prio.5
+extra-manpage: fireqos-insidegre.5
   -->
 
 # SYNOPSIS
@@ -51,7 +53,15 @@ ack|acks
 
 { tos | priority } *tosid* [,*tosid*...]
 
+{ DSCP } *classname* [,*classname*...]
+
 mark *mark* [,*mark*...]
+
+connmark *mark* [,*mark*...]
+
+rawmark *mark* [,*mark*...]
+
+custommark *name* *mark* [,*mark*...]
 
 { port | ports } *port*[:*range*] [ ,*port*[:*range*]... ]
 
@@ -65,11 +75,52 @@ src *net* [,*net*...]
 
 dst *net* [,*net*...]
 
+{ srcmac | smac } *mac*
+
+{ dstmac | dmac } *mac*
+
 prio *id*
+
+input
+
+output
+
+custom '*custom tc parameters*'
+
+estimator *interval* *decay*
+
+police *police*
+
+insidegre
 
 # DESCRIPTION
 
 These options apply to `match` statements.
+
+## input, output
+
+On `bidirectional` interfaces, `input` and `output` will check the
+current direction of the interface. If the match is `input` but the
+interface is `output` the match will be reversed. The same will happen
+if `output` is given at the match and the interface is `input`.
+
+The parameters that are reversed are:
+
+* `src` and `dst`
+* `sport` and `dport`
+* `srcmac` and `dstmac`
+
+This allows a definition like this:
+
+~~~~
+  interface dsl0 world bidirectional ...
+    class surfing ...
+      match input sport 0:1023
+~~~~
+
+The above will match `sport 0:1023` at the `input` interface, and will
+automatically reverse it to match `dport 0:1023` at the `output` interface.
+
 
 ## at
 
@@ -115,7 +166,7 @@ match proto tcp,udp syn
 
 ## ack, acks
 
-Same as `syn`, but matching TCP ACK packets.
+Same as `syn`, but matching small TCP packets with the ACK bit set.
 
 ## proto, protocol, tcp, udp, icmp, gre, ipv6
 
@@ -139,14 +190,38 @@ the following:
 > There is also a class parameter called `priority`, see
 > [fireqos-params-class(5)][keyword-fireqos-priority-class].
 
-## mark (QOS)
+## dscp
 
-Match an iptables(8) MARK. Matching iptables(8) MARKs does not work on
+Match to DSCP value in IP TOS header field. The *classname* has to be one of
+the following values:
+
+* CS1, CS2, CS3, CS4, CS5, CS6, CS7
+* AF11, AF12, AF13
+* AF21, AF22, AF23
+* AF31, AF32, AF33
+* AF41, AF42, AF43
+* EF
+
+> *Note*
+>
+> tc-filter only supports ToS parameters. That is why a lookaside table
+> is configured within fireqos code to translate the DSCP value to their
+> matching TOS value. See RFC2474 for more information.
+
+## mark, connmark, custommark, rawmark
+
+Match an iptables(8) MARK. This works the same way it works for
+FireHOL. FireHOL and FireQOS share the same marks and their masks.
+
+Matching iptables(8) MARKs do not work on
 input interfaces. You can use them only on output. The IFB devices
 that are used for shaping inbound traffic do not have any iptables
 hooks to allow matching MARKs. If you try it, FireQOS will attempt
 to do it, but currently you will get an error from the tc(8) command
-executed.
+executed or they will be silently ignored by it.
+
+On openwrt there is a module called `act_commark` that will enable
+this feature.
 
 ## ports, sports, dports
 
@@ -245,11 +320,35 @@ interface eth0 lan output rate 1Gbit
     match host 192.0.2.1 port 1234 prio 1 # Matches before host-only
 ~~~~
 
+## insidegre
+
+By specifying keyword `insidegre` a GRE (Generic Routing Encapsulation)
+packet can be matched on the encapsulated IP packet header information.
+
+`insidegre` is available for the following matches:
+
+* src
+* dst
+* protocol
+* port
+* tos
+* dscp
+
+~~~~
+  interface eth0 world ...
+    class surfing commit 128kbit ceil 1024kbit prio 7
+      match src 10.1.128.230 dst 8.8.8.8 insidegre
+      match protocol ospf insidegre
+      match port 25 insidegre
+      match tos 3 insidegre
+      match dscp ef insidegre
+~~~~
+
 # SEE ALSO
 
 * [fireqos(1)][] - FireQOS program
 * [fireqos.conf(5)][] - FireQOS configuration file
 * [fireqos-match(5)][keyword-fireqos-match] - QOS traffic match
 * [FireHOL Website](http://firehol.org/)
-* [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireQOS Online PDF Manual](http://firehol.org/fireqos-manual.pdf)
+* [FireQOS Online Documentation](http://firehol.org/documentation/)

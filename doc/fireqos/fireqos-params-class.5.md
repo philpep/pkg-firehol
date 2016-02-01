@@ -68,11 +68,30 @@ quantum *bytes*
 
 priority | balanced
 
+input | output
+
+
 # DESCRIPTION
 
 All of the options apply to `interface` and `class` statements.
 
 Units for speeds are defined in [fireqos.conf(5)][].
+
+## input, output
+
+For `bidirectional` interfaces, `input` and `output` define the direction
+for which the parameters following it are applied.
+
+Only the following parameters are affected (all the others are applied
+to both input and output):
+
+ * `minrate`
+ * `rate`, `min`, `commit`
+ * `ceil`, `max`
+
+If one of the above is not defined for either `input` or `output`,
+its default will be used.
+
 
 ## rate, commit, min
 
@@ -166,15 +185,9 @@ kernel to calculate the overheads in the packets.
 `adsl` is a special `linklayer` that automatically calculates ATM
 overheads for the link.
 
-`local` is used when the ADSL modem is directly attached to your
-computer (for example a PCI card, or a USB modem).
+`local` is used when linux is running PPPoE.
 
-`remote` is used when you have an ADSL router attached to an
-ethernet port of your computer.
-
-When one is using PPPoE pass-through, so there is an ethernet ADSL
-modem (not router) and PPP is running on the Linux host, the option
-to choose is `local`.
+`remote` is used when PPPoE is running on the router.
 
 > **Note**
 >
@@ -327,5 +340,5 @@ by FireQOS. The default is used only if you don't explicitly use a
 * [fireqos-interface(5)][keyword-fireqos-interface] - QOS interface definition
 * [fireqos-class(5)][keyword-fireqos-class-definition] - QOS class definition
 * [FireHOL Website](http://firehol.org/)
-* [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireQOS Online PDF Manual](http://firehol.org/fireqos-manual.pdf)
+* [FireQOS Online Documentation](http://firehol.org/documentation/)

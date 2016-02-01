@@ -1,0 +1,79 @@
+.TH "firehol\-dscp" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-dscp \- set the DSCP field in the packet header
+.SH SYNOPSIS
+.PP
+dscp { \f[I]value\f[] | class \f[I]classid\f[] } \f[I]chain\f[]
+\f[I]rule\-params\f[]
+.SH DESCRIPTION
+.PP
+The \f[C]dscp\f[] helper command sets the DSCP field in the header of
+packets traffic, to allow QoS shaping.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+There is also a \f[C]dscp\f[] parameter which allows matching DSCP
+values within individual rules (see firehol\-params(5)).
+.RE
+.PP
+Set \f[I]value\f[] to a decimal or hexadecimal (0xnn) number to set an
+explicit DSCP value or use \f[C]class\f[] \f[I]classid\f[] to use an
+iptables(8) DiffServ class, such as EF, BE, CSxx or AFxx (see
+\f[C]iptables\ \-j\ DSCP\ \-\-help\f[] for more information).
+.PP
+The \f[I]chain\f[] will be used to find traffic to mark.
+It can be any of the iptables(8) built in chains belonging to the
+\f[C]mangle\f[] table.
+The chain names are: INPUT, FORWARD, OUTPUT, PREROUTING and POSTROUTING.
+The names are case\-sensitive.
+.PP
+The \f[I]rule\-params\f[] define a set of rule parameters to match the
+traffic that is to be marked within the chosen chain.
+See firehol\-params(5) for more details.
+.PP
+Any \f[C]dscp\f[] commands will affect all traffic matched.
+They must be declared before the first router or interface.
+.SH EXAMPLES
+.IP
+.nf
+\f[C]
+
+\ #\ set\ DSCP\ field\ to\ 32,\ packets\ sent\ by\ the\ local\ machine
+\ dscp\ 32\ OUTPUT
+
+\ #\ set\ DSCP\ field\ to\ 32\ (hex\ 20),\ packets\ routed\ by\ the\ local\ machine
+\ dscp\ 0x20\ FORWARD
+
+\ #\ set\ DSCP\ to\ DiffServ\ class\ EF,\ packets\ routed\ by\ the\ local\ machine
+\ #\ \ \ \ \ \ \ \ \ \ \ \ \ \ and\ destined\ for\ port\ TCP/25\ of\ 198.51.100.1
+\ dscp\ class\ EF\ FORWARD\ proto\ tcp\ dport\ 25\ dst\ 198.51.100.1
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-params(5) \- optional rule parameters
+.IP \[bu] 2
+iptables(8) (http://ipset.netfilter.org/iptables.man.html) \-
+administration tool for IPv4 firewalls
+.IP \[bu] 2
+ip6tables(8) (http://ipset.netfilter.org/ip6tables.man.html) \-
+administration tool for IPv6 firewalls
+.IP \[bu] 2
+ip(8) \- show / manipulate routing, devices, policy routing and tunnels
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.IP \[bu] 2
+Linux Advanced Routing & Traffic Control HOWTO (http://lartc.org/howto/)
+.SH AUTHORS
+FireHOL Team.

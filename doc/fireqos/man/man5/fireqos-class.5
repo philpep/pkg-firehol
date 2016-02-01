@@ -1,0 +1,200 @@
+.TH "fireqos\-class" "5" "Built 10 Jan 2016" "FireQOS Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+fireqos\-class \- traffic class definition
+.SH SYNOPSIS
+.PP
+{class|class4|class6|class46} [group] \f[I]name\f[]
+[\f[I]optional\-class\-params\f[]]
+.PP
+{class|class4|class6|class46} group end
+.SH DESCRIPTION
+.PP
+There is also an optional \f[C]match\f[] parameter called
+\f[C]class\f[]; see fireqos\-params\-match(5).
+.PP
+Writing \f[C]class\f[] inherits the IPv4/IPv6 version from its enclosing
+interface (see fireqos\-interface(5)).
+.PP
+Writing \f[C]class4\f[] includes only IPv4 traffic in the class.
+.PP
+Writing \f[C]class6\f[] includes only IPv6 traffic in the class.
+.PP
+Writing \f[C]class46\f[] includes both IPv4 and IPv6 traffic in the
+class.
+.PP
+The actual traffic to be matched by a class is defined by adding
+matches.
+See fireqos\-match(5).
+.PP
+The sequence that classes appear in the configuration defines their
+priority.
+The first class is the most important one.
+Unless otherwise limited it will get all available bandwidth if it needs
+to.
+.PP
+The second class is less important than the first, the third is even
+less important than the second, etc.
+The idea is very simple: just put the classes in the order of importance
+to you.
+.PP
+Classes can have their priority assigned explicitly with the
+\f[C]prio\f[] parameter.
+See fireqos\-params\-class(5).
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+The underlying Linux qdisc used by FireQOS, HTB, supports only 8
+priorities, from 0 to 7.
+If you use more than 8 priorities, all after the 8th will get the same
+priority (\f[C]prio\f[] 7).
+.RE
+.PP
+All classes in FireQOS share the \f[C]interface\f[] bandwidth.
+However, every class has a \f[I]committed\f[] rate (the minimum
+guaranteed speed it will get if it needs to) and a \f[I]ceiling\f[] (the
+maximum rate this class can reach, provided there is capacity available
+and even if there is spare).
+.PP
+Classes may be nested to any level by using the \f[C]class\ group\f[]
+syntax.
+.PP
+By default FireQOS creates nested classes as \f[I]classes directly
+attached to their parent class\f[].
+This way, nesting does not add any delays.
+.PP
+FireQOS can also \f[I]emulate new hardware\f[] at the
+\f[C]group\ class\f[] level.
+This may be needed, when for example you have an ADSL router that you
+connect to via Ethernet: you want the LAN traffic to be at Ethernet
+speed, but WAN traffic at ADSL speed with proper ADSL overheads
+calculation.
+.PP
+To accomplish hardware emulation nesting, you add a \f[C]linklayer\f[]
+definition (\f[C]ethernet\f[], \f[C]adsl\f[], \f[C]atm\f[], etc.), or
+just an \f[C]mtu\f[] to the \f[C]group\ class\f[].
+FireQOS will create a qdisc within the class, where the linklayer
+parameters will be assigned and the child classes will be attached to
+this qdisc.
+This adds some delay to the packets of the child classes, but allows you
+to emulate new hardware.
+For linklayer options, see
+fireqos\-params\-class(5).
+.PP
+There is special class, called \f[C]default\f[].
+Default classes can be given explicitly in the configuration file.
+If they are not found in the config, FireQOS will append one at the end
+of each \f[C]interface\f[] or \f[C]class\ group\f[].
+.SH PARAMETERS
+.TP
+.B \f[C]group\f[]
+It is possible to nest classes by using a group.
+Grouped classes must be closed with the \f[C]class\ group\ end\f[]
+command.
+Class groups can be nested.
+.RS
+.RE
+.TP
+.B \f[I]name\f[]
+This is a single\-word name for this class and is used for displaying
+status information.
+.RS
+.RE
+.TP
+.B \f[I]optional\-class\-params\f[]
+The set of optional class parameters to apply to this class.
+.RS
+.PP
+The following optional class parameters are inherited from the
+\f[C]interface\f[] the class is in:
+.IP \[bu] 2
+\f[C]ceil\f[]
+.IP \[bu] 2
+\f[C]burst\f[]
+.IP \[bu] 2
+\f[C]cburst\f[]
+.IP \[bu] 2
+\f[C]quantum\f[]
+.IP \[bu] 2
+\f[C]qdisc\f[]
+.PP
+If you define one of these at the interface level, then all classes
+within the interface will get the value by default.
+These values can be overwritten by defining the parameter on the class
+too.
+The same inheritance works on class groups.
+.PP
+Optional class parameters not in the above list are \f[I]not\f[]
+inherited from interfaces.
+.PP
+FireQOS will by default \f[C]commit\f[] 1/100th of the parent bandwidth
+to each class.
+This can be overwritten per class by adding a \f[C]commit\f[] to the
+class, or adding a \f[C]minrate\f[] at the parent.
+.RE
+.SH EXAMPLES
+.PP
+To create a nested class, called servers, containing http and smtp:
+.IP
+.nf
+\f[C]
+interface\ eth0\ lan\ input\ rate\ 1Gbit
+\ \ class\ voip\ commit\ 1Mbit
+\ \ \ \ match\ udp\ ports\ 5060,10000:10100
+
+\ \ class\ group\ servers\ commit\ 50%\ \ #\ define\ the\ parent\ class
+\ \ \ \ match\ tcp\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #\ apply\ to\ all\ child\ classes
+
+\ \ \ \ class\ mail\ commit\ 50%\ \ \ \ \ \ \ \ \ #\ 50%\ of\ parent\ (\[aq]servers\[aq])
+\ \ \ \ \ \ match\ port\ 25\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #\ matches\ within\ parent\ (\[aq]servers\[aq])
+
+\ \ \ \ class\ web\ commit\ 50%
+\ \ \ \ \ \ match\ port\ 80
+\ \ class\ group\ end\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #\ end\ the\ group\ \[aq]servers\[aq]
+
+\ \ class\ streaming\ commit\ 30%
+\f[]
+.fi
+.PP
+To create a nested class which emulates an ADSL modem:
+.IP
+.nf
+\f[C]
+
+interface\ eth0\ lan\ output\ rate\ 1Gbit\ ethernet
+\ \ class\ lan
+\ \ \ \ match\ dst\ 192.168.0.0/24\ #\ LAN\ traffic
+
+\ \ class\ group\ adsl\ rate\ 10Mbit\ ceil\ 10Mbit\ adsl\ remote\ pppoe\-llc
+\ \ \ \ match\ all\ #\ all\ non\-lan\ traffic\ in\ this\ emulated\ hardware\ group
+
+\ \ \ \ class\ voip\ #\ class\ within\ adsl
+\ \ \ \ \ \ match\ udp\ port\ 5060
+
+\ \ \ \ class\ web\ #\ class\ within\ adsl
+\ \ \ \ \ \ match\ tcp\ port\ 80,443
+\ \ class\ group\ end
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+fireqos\-params\-class(5) \- QOS class
+parameters
+.IP \[bu] 2
+fireqos(1) \- FireQOS program
+.IP \[bu] 2
+fireqos.conf(5) \- FireQOS configuration file
+.IP \[bu] 2
+fireqos\-interface(5) \- QOS interface definition
+.IP \[bu] 2
+fireqos\-match(5) \- QOS traffic match
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireQOS Online PDF Manual (http://firehol.org/fireqos-manual.pdf)
+.IP \[bu] 2
+FireQOS Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

@@ -60,6 +60,16 @@ classes. See [fireqos-class(5)][keyword-fireqos-class-definition].
 
     If set to `output`, traffic going out via the interface is shaped.
 
+    if set to `bidirectional` traffic for both input and output can
+    be shaped. If you need to differentiate input and output parameters
+    per statements within the interface, you can prefix them with
+    `input` or `output` like this:
+
+    ~~~~
+    interface eth0 lan bidirectional ...
+    	class voip input commit 1Mbit output commit 2Mbit ...
+    ~~~~
+
 *optional-class-params*
 :   For a list of optional class parameters which can be applied to an
     interface, see [fireqos-params-class(5)][].
@@ -82,5 +92,5 @@ traffic:
 * [fireqos-class(5)][keyword-fireqos-class-definition] - QOS class definition
 * [fireqos-params-class(5)][] - QOS class parameters
 * [FireHOL Website](http://firehol.org/)
-* [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireQOS Online PDF Manual](http://firehol.org/fireqos-manual.pdf)
+* [FireQOS Online Documentation](http://firehol.org/documentation/)

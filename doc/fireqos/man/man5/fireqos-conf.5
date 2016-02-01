@@ -1,0 +1,243 @@
+.TH "fireqos.conf" "5" "Built 10 Jan 2016" "FireQOS Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+fireqos.conf \- FireQOS configuration file
+.SH DESCRIPTION
+.PP
+This file defines the traffic shaping that will be applied by
+fireqos(1).
+.PP
+The default configuration file is \f[C]/etc/firehol/fireqos.conf\f[].
+It can be overridden from the command line.
+.PP
+A configuration consists of a number of input and output
+\f[C]interface\f[] definitions (see
+fireqos\-interface(5)).
+Each \f[C]interface\f[] can define any number of (optionally nested)
+\f[C]class\f[]es (see fireqos\-class(5)) which shape
+the traffic which they \f[C]match\f[] (see
+fireqos\-match(5)).
+.SH SPEED UNITS
+.PP
+In FireQOS, speeds can be expressed in the following units:
+.TP
+.B #\f[C]bps\f[]
+# bytes per second
+.RS
+.RE
+.TP
+.B #\f[C]kbps\f[]; #\f[C]Kbps\f[]
+# kilobytes per second
+.RS
+.RE
+.TP
+.B #\f[C]mbps\f[]; #\f[C]Mbps\f[]
+# megabytes per second
+.RS
+.RE
+.TP
+.B #\f[C]gbps\f[]; #\f[C]Gbps\f[]
+# gigabytes per second
+.RS
+.RE
+.TP
+.B #\f[C]bit\f[]
+# bits per second
+.RS
+.RE
+.TP
+.B #\f[C]kbit\f[]; #\f[C]Kbit\f[]; #
+# kilobits per second (default)
+.RS
+.RE
+.TP
+.B #\f[C]mbit\f[]; #\f[C]Mbit\f[]
+# megabits per second
+.RS
+.RE
+.TP
+.B #\f[C]gbit\f[]; #\f[C]Gbit\f[]
+# gigabits per second
+.RS
+.RE
+.TP
+.B #\f[C]%\f[]
+In a \f[C]class\f[], uses this percentage of the enclosing
+\f[C]rate\f[].
+.RS
+.RE
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+The default, \f[C]kbit\f[] is different to tc(8) which assumes bytes per
+second when no unit is specified.
+.RE
+.SH EXAMPLE
+.PP
+This example uses match statements.
+.IP
+.nf
+\f[C]
+
+\ #\ incoming\ traffic\ from\ my\ ADSL\ router
+\ interface\ eth2\ adsl\-in\ input\ rate\ 10500kbit\ adsl\ remote\ pppoe\-llc
+\ \ \ class\ voip\ commit\ 100kbit\ pfifo
+\ \ \ \ \ match\ udp\ ports\ 5060,10000:10100\ #\ asterisk\ sip\ and\ rtp
+\ \ \ \ \ match\ udp\ ports\ 16393:16402\ #\ apple\ facetime
+
+\ \ \ class\ realtime\ commit\ 10%
+\ \ \ \ \ match\ tcp\ port\ 22,1195:1198,1753\ #\ ssh,\ openvpn,\ pptp
+\ \ \ \ \ match\ udp\ port\ 53\ #\ dns
+\ \ \ \ \ match\ proto\ GRE
+\ \ \ \ \ match\ icmp
+\ \ \ \ \ match\ tcp\ syn
+\ \ \ \ \ match\ tcp\ ack
+
+\ \ \ class\ clients\ commit\ 10%
+\ \ \ \ \ match\ tcp\ port\ 20,21,25,80,143,443,465,873,993\ #\ mail,\ web,\ ftp,\ etc
+
+\ #\ unmatched\ traffic\ goes\ here\ (\[aq]default\[aq]\ is\ a\ special\ name)
+\ \ \ class\ default\ max\ 90%
+
+\ #\ I\ define\ torrents\ beneath\ the\ default\ class,\ so\ they\ slow
+\ #\ down\ when\ the\ default\ class\ is\ willing\ to\ get\ bandwidth
+\ \ \ class\ torrents\ max\ 90%
+\ \ \ \ \ match\ port\ 51414\ #\ my\ torrent\ client
+
+\ #\ outgoing\ traffic\ to\ my\ ADSL\ router
+\ interface\ eth2\ adsl\-out\ output\ rate\ 800kbit\ adsl\ remote\ pppoe\-llc
+\ \ \ class\ voip\ commit\ 100kbit\ pfifo
+\ \ \ \ \ match\ udp\ ports\ 5060,10000:10100\ #\ asterisk\ sip\ and\ rtp
+\ \ \ \ \ match\ udp\ ports\ 16393:16402\ #\ apple\ facetime
+
+\ \ \ class\ realtime\ commit\ 10%
+\ \ \ \ \ match\ tcp\ port\ 22,1195:1198,1753\ #\ ssh,\ openvpn,\ pptp
+\ \ \ \ \ match\ udp\ port\ 53\ #\ dns
+\ \ \ \ \ match\ proto\ GRE
+\ \ \ \ \ match\ icmp
+\ \ \ \ \ match\ tcp\ syn
+\ \ \ \ \ match\ tcp\ ack
+
+\ \ \ class\ clients\ commit\ 10%
+\ \ \ \ \ match\ tcp\ port\ 20,21,25,80,143,443,465,873,993\ #\ mail,\ web,\ ftp,\ etc
+
+\ #\ unmatched\ traffic\ goes\ here\ (\[aq]default\[aq]\ is\ a\ special\ name)
+\ \ \ class\ default\ max\ 90%
+
+\ #\ I\ define\ torrents\ beneath\ the\ default\ class,\ so\ they\ slow
+\ #\ down\ when\ the\ default\ class\ is\ willing\ to\ get\ bandwidth
+\ \ \ class\ torrents\ max\ 90%
+\ \ \ \ \ match\ port\ 51414\ #\ my\ torrent\ client
+\f[]
+.fi
+.PP
+This example uses server/client statements in a bidirectional interface.
+Of course match statements can also be specified.
+FireQOS will create 2 interfaces out of this: world\-in and world\-out.
+.IP
+.nf
+\f[C]
+\ \ DEVICE=dsl0
+\ \ INPUT_SPEED="12000kbit"
+\ \ OUTPUT_SPEED="800kbit"
+\ \ LINKTYPE="adsl\ local\ pppoe\-llc"
+
+\ \ #\ a\ few\ service\ definitions
+\ \ #\ all\ the\ rest\ that\ are\ used\ in\ this\ example
+\ \ #\ are\ defined\ by\ FireQOS
+\ \ server_netdata_ports="tcp/19999"
+\ \ server_rtp_ports="udp/10000:10100"
+\ \ server_openvpn_ports="any/1195:1198"
+\ \ server_mytorrent_ports="any/60000"
+\ \ server_mytorrenttransfers_ports="any/60001:64999"
+\ \ server_myssh_ports="tcp/2222"
+
+\ \ #\ League\ Of\ Legends\ game\ (yes!\ I\ have\ kids)
+\ \ server_lol_ports="udp/5000:5500\ tcp/8393:8400,2099,5223,5222,8088"
+\ \ 
+\ \ interface\ $DEVICE\ world\ bidirectional\ $LINKTYPE\ input\ rate\ $INPUT_SPEED\ output\ rate\ $OUTPUT_SPEED
+\ \ \ \ 
+\ \ \ \ class\ voip\ commit\ 100kbit\ pfifo
+\ \ \ \ \ \ server\ sip
+\ \ \ \ \ \ client\ sip
+\ \ \ \ \ \ server\ rtp
+\ \ \ \ \ \ client\ stun
+
+\ \ \ \ class\ interactive\ input\ commit\ 20%\ output\ commit\ 10%
+\ \ \ \ \ \ server\ icmp\ limit\ 50%
+
+\ \ \ \ \ \ server\ dns
+\ \ \ \ \ \ client\ dns
+
+\ \ \ \ \ \ server\ ssh
+\ \ \ \ \ \ client\ ssh
+
+\ \ \ \ \ \ server\ myssh
+\ \ \ \ \ \ client\ myssh
+
+\ \ \ \ \ \ client\ teamviewer
+\ \ \ \ \ \ client\ lol
+
+\ \ \ \ class\ chat\ input\ commit\ 1000kbit\ output\ commit\ 30%
+\ \ \ \ \ \ client\ facetime
+
+\ \ \ \ \ \ server\ hangouts
+\ \ \ \ \ \ client\ hangouts
+
+\ \ \ \ \ \ client\ gtalk
+\ \ \ \ \ \ client\ jabber
+
+\ \ \ \ class\ vpns\ input\ commit\ 20%\ output\ commit\ 30%
+\ \ \ \ \ \ server\ pptp
+\ \ \ \ \ \ server\ GRE
+\ \ \ \ \ \ server\ openvpn
+
+\ \ \ \ class\ servers
+\ \ \ \ \ \ server\ netdata
+\ \ \ \ \ \ server\ http
+
+\ \ \ \ #\ a\ class\ group\ to\ favor\ tcp\ handshake\ over\ transfers
+\ \ \ \ class\ group\ surfing\ prio\ keep\ commit\ 5%
+\ \ \ \ \ \ client\ surfing
+\ \ \ \ \ \ client\ rsync
+
+\ \ \ \ \ \ class\ synacks
+\ \ \ \ \ \ \ \ match\ tcp\ syn
+\ \ \ \ \ \ \ \ match\ tcp\ ack
+
+\ \ \ \ class\ group\ end
+
+\ \ \ \ class\ synacks\ commit\ 5%
+\ \ \ \ \ \ match\ tcp\ syn
+\ \ \ \ \ \ match\ tcp\ ack
+
+\ \ \ \ class\ default
+
+\ \ \ \ class\ background\ commit\ 4%
+\ \ \ \ \ \ client\ torrents
+\ \ \ \ \ \ server\ mytorrent
+\ \ \ \ \ \ server\ mytorrenttransfers
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+fireqos(1) \- FireQOS program
+.IP \[bu] 2
+fireqos\-interface(5) \- QOS interface definition
+.IP \[bu] 2
+fireqos\-class(5) \- QOS class definition
+.IP \[bu] 2
+fireqos\-match(5) \- QOS traffic match
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireQOS Online PDF Manual (http://firehol.org/fireqos-manual.pdf)
+.IP \[bu] 2
+FireQOS Online Documentation (http://firehol.org/documentation/)
+.IP \[bu] 2
+tc(8) (http://lartc.org/manpages/tc.html) \- show / manipulate traffic
+control settings
+.SH AUTHORS
+FireHOL Team.

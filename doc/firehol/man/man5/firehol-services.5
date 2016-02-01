@@ -1,0 +1,4470 @@
+.TH "firehol\-services" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-services \- FireHOL services list
+.SH SYNOPSIS
+.PP
+AH all amanda
+any anystateless
+apcupsd apcupsdnis
+aptproxy asterisk
+.PP
+cups custom
+cvspserver
+.PP
+darkstat daytime
+dcc dcpp dhcp
+dhcprelay dhcpv6
+dict distcc dns
+.PP
+echo emule eserver
+ESP
+.PP
+finger ftp
+.PP
+gift giftui
+gkrellmd GRE
+.PP
+h323 heartbeat http
+httpalt https
+hylafax
+.PP
+iax iax2 ICMP
+icmp ICMPV6 icmpv6
+icp ident imap
+imaps ipsecnatt
+ipv6error ipv6mld
+ipv6neigh ipv6router
+irc isakmp
+.PP
+jabber jabberd
+.PP
+l2tp ldap ldaps
+lpd
+.PP
+microsoft_ds mms
+msn msnp ms_ds
+multicast mysql
+.PP
+netbackup netbios_dgm
+netbios_ns netbios_ssn
+nfs nis nntp
+nntps nrpe ntp
+nut nxserver
+.PP
+openvpn oracle OSPF
+.PP
+ping pop3 pop3s
+portmap postgres
+pptp privoxy
+.PP
+radius radiusold
+radiusoldproxy
+radiusproxy rdp
+rndc rsync rtp
+.PP
+samba sane sip
+smtp smtps snmp
+snmptrap socks
+squid ssh stun
+submission sunrpc
+swat syslog
+.PP
+telnet tftp time
+timestamp tomcat
+.PP
+upnp uucp
+.PP
+vmware vmwareauth
+vmwareweb vnc
+.PP
+webcache webmin
+whois
+.PP
+xbox xdmcp
+.SH DESCRIPTION
+.SS service: AH
+.TP
+.B IPSec Authentication Header (AH)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ AH\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+51/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/IPsec#Authentication_Header)
+.PP
+Notes
+.RS
+.PP
+For more information see this Archive of the FreeS/WAN
+documentation (http://web.archive.org/web/20100918134143/http://www.freeswan.org/freeswan_trees/freeswan-1.99/doc/ipsec.html#AH.ipsec)
+and RFC 2402 (http://www.ietf.org/rfc/rfc2402.txt).
+.RE
+.RE
+.SS service: all
+.TP
+.B Match all traffic
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ all\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+all
+.PP
+Client Ports:
+.IP \[bu] 2
+all
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_ftp
+CONFIG_NF_CONNTRACK_FTP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_FTP.html)
+.IP \[bu] 2
+nf_conntrack_irc
+CONFIG_NF_CONNTRACK_IRC (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_IRC.html)
+.IP \[bu] 2
+nf_conntrack_sip
+CONFIG_NF_CONNTRACK_SIP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_SIP.html)
+.IP \[bu] 2
+nf_conntrack_pptp
+CONFIG_NF_CONNTRACK_PPTP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_PPTP.html)
+.IP \[bu] 2
+nf_conntrack_proto_gre
+CONFIG_NF_CT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_CT_PROTO_GRE.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_ftp
+CONFIG_NF_NAT_FTP (http://cateee.net/lkddb/web-lkddb/NF_NAT_FTP.html)
+.IP \[bu] 2
+nf_nat_irc
+CONFIG_NF_NAT_IRC (http://cateee.net/lkddb/web-lkddb/NF_NAT_IRC.html)
+.IP \[bu] 2
+nf_nat_sip
+CONFIG_NF_NAT_SIP (http://cateee.net/lkddb/web-lkddb/NF_NAT_SIP.html)
+.IP \[bu] 2
+nf_nat_pptp
+CONFIG_NF_NAT_PPTP (http://cateee.net/lkddb/web-lkddb/NF_NAT_PPTP.html)
+.IP \[bu] 2
+nf_nat_proto_gre
+CONFIG_NF_NAT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_NAT_PROTO_GRE.html)
+.PP
+Notes
+.RS
+.PP
+Matches all traffic (all protocols, ports, etc.).
+Note that to provide "connections in one direction with replies"
+semantics, the kernel connection tracker is still used: this will
+therefore still not match packets if they are not understood as part of
+a connection (e.g.
+some ICMPv6 packets, requests and replies taking different routes,
+complex protocols with no helper loaded).
+.PP
+This service may indirectly setup a set of other services, if they
+require kernel modules to be loaded.
+The following complex services are activated:
+.RE
+.RE
+.SS service: amanda
+.TP
+.B Advanced Maryland Automatic Network Disk Archiver
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/10080
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_amanda
+CONFIG_NF_CONNTRACK_AMANDA (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_AMANDA.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_amanda
+CONFIG_NF_NAT_AMANDA (http://cateee.net/lkddb/web-lkddb/NF_NAT_AMANDA.html)
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.amanda.org/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Advanced_Maryland_Automatic_Network_Disk_Archiver)
+.RE
+.SS service: any
+.TP
+.B Match all traffic (without modules or indirect)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ any\ *myname*\ accept\ proto\ 47
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+all
+.PP
+Client Ports:
+.IP \[bu] 2
+all
+.PP
+Netfilter Modules
+.PP
+Netfilter NAT Modules
+.PP
+Notes
+.RS
+.PP
+Matches all traffic (all protocols, ports, etc), but does not care about
+kernel modules and does not activate any other service indirectly.
+In combination with the firehol\-params(5) this
+service can match unusual traffic (e.g.
+GRE \- protocol 47).
+.PP
+Note that you have to supply your own name in addition to "any".
+.RE
+.RE
+.SS service: anystateless
+.TP
+.B Match all traffic statelessly
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ anystateless\ *myname*\ accept\ proto\ 47
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+all
+.PP
+Client Ports:
+.IP \[bu] 2
+all
+.PP
+Notes
+.RS
+.PP
+Matches all traffic (all protocols, ports, etc), but does not care about
+kernel modules and does not activate any other service indirectly.
+In combination with the firehol\-params(5) this
+service can match unusual traffic (e.g.
+GRE \- protocol 47).
+.PP
+This service is identical to "any" but does not care about the state of
+traffic.
+.PP
+Note that you have to supply your own name in addition to
+"anystateless".
+.RE
+.RE
+.SS service: apcupsd
+.TP
+.B APC UPS Daemon
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ apcupsd\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/6544
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.apcupsd.com)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Apcupsd)
+.PP
+Notes
+.RS
+.PP
+This service must be defined as "server apcupsd accept" on all machines
+not directly connected to the UPS (i.e.
+slaves).
+.PP
+Note that the port defined here is not the default port (6666) used if
+you download and compile APCUPSD, since the default conflicts with IRC
+and many distributions (like Debian) have changed this to 6544.
+.PP
+You can define port 6544 in APCUPSD, by changing the value of NETPORT in
+its configuration file, or overwrite this FireHOL service definition
+using the procedures described in Adding Services in
+firehol.conf(5).
+.RE
+.RE
+.SS service: apcupsdnis
+.TP
+.B APC UPS Daemon Network Information Server
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ apcupsdnis\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3551
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.apcupsd.com)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Apcupsd)
+.PP
+Notes
+.RS
+.PP
+This service allows the remote WEB interfaces of
+APCUPSD (http://www.apcupsd.com/), to connect and get information from
+the server directly connected to the UPS device.
+.RE
+.RE
+.SS service: aptproxy
+.TP
+.B Advanced Packaging Tool Proxy
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ aptproxy\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/9999
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Apt-proxy)
+.RE
+.SS service: asterisk
+.TP
+.B Asterisk PABX
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ asterisk\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5038
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.asterisk.org)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Asterisk_PBX)
+.PP
+Notes
+.RS
+.PP
+This service refers only to the manager interface of asterisk.
+You should normally enable sip, h323,
+rtp, etc.
+at the firewall level, if you enable the relative channel drivers of
+asterisk.
+.RE
+.RE
+.SS service: cups
+.TP
+.B Common UNIX Printing System
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ cups\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/631 udp/631
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.cups.org)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Common_Unix_Printing_System)
+.RE
+.SS service: custom
+.TP
+.B Custom definitions
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ custom\ myimap\ tcp/143\ default\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+custom
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Notes
+.RS
+.PP
+The full syntax is:
+.PP
+\f[I]subcommand\f[] \f[C]custom\f[] \f[I]name\f[]
+\f[I]svr\-proto/ports\f[] \f[I]cli\-ports\f[] \f[I]action\f[]
+\f[I]params\f[]
+.PP
+This service is used by FireHOL to allow you create rules for services
+which do not have a definition.
+.PP
+\f[C]subcommand\f[], \f[I]action\f[] and \f[I]params\f[] have their
+usual meanings.
+.PP
+A \f[I]name\f[] must be supplied along with server ports in the form
+\f[I]proto/range\f[] and client ports which takes only a \f[I]range\f[].
+.PP
+To define services with the built\-in extension mechanism to avoid the
+need for \f[C]custom\f[] services, see Adding
+Services in firehol.conf(5).
+.RE
+.RE
+.SS service: cvspserver
+.TP
+.B Concurrent Versions System
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ cvspserver\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/2401
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.nongnu.org/cvs/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Concurrent_Versions_System)
+.RE
+.SS service: darkstat
+.TP
+.B Darkstat network traffic analyser
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ darkstat\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/666
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (https://unix4lyfe.org/darkstat/)
+.RE
+.SS service: daytime
+.TP
+.B Daytime Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ daytime\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/13
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Daytime_Protocol)
+.RE
+.SS service: dcc
+.TP
+.B Distributed Checksum Clearinghouse
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dcc\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/6277
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Distributed_Checksum_Clearinghouse)
+.PP
+Notes
+.RS
+.PP
+See also this DCC
+FAQ (http://www.rhyolite.com/dcc/FAQ.html#firewall-ports).
+.RE
+.RE
+.SS service: dcpp
+.TP
+.B Direct Connect++ P2P
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dcpp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1412 udp/1412
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://dcplusplus.sourceforge.net)
+.RE
+.SS service: dhcp
+.TP
+.B Dynamic Host Configuration Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dhcp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/67
+.PP
+Client Ports:
+.IP \[bu] 2
+68
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Dhcp)
+.PP
+Notes
+.RS
+.PP
+The dhcp service is implemented as stateless rules.
+.PP
+DHCP clients broadcast to the network (src 0.0.0.0 dst 255.255.255.255)
+to find a DHCP server.
+If the DHCP service was stateful the iptables connection tracker would
+not match the packets and deny to send the reply.
+.PP
+Note that this change does not affect the security of either DHCP
+servers or clients, since only the specific ports are allowed (there is
+no random port at either the server or the client side).
+.PP
+Note also that the "server dhcp accept" or "client dhcp accept" commands
+should placed within interfaces that do not have src and / or dst
+defined (because of the initial broadcast).
+.PP
+You can overcome this problem by placing the DHCP service on a separate
+interface, without a src or dst but with a policy return.
+Place this interface before the one that defines the rest of the
+services.
+.PP
+For example:
+.PP
+\f[C]interface\ eth0\ dhcp\f[]
+.PP
+\f[C]policy\ return\f[]
+.PP
+\f[C]server\ dhcp\ accept\f[]
+.PP
+\f[C]interface\ eth0\ lan\ src\ "$mylan"\ dst\ "$myip"\f[]
+.PP
+\f[C]client\ all\ accept\f[]
+.PP
+For example: interface eth0 dhcp policy return server dhcp accept
+interface eth0 lan src "$mylan" dst "$myip" client all accept
+.PP
+This service implicitly sets its client or server to ipv4 mode.
+.RE
+.RE
+.SS service: dhcprelay
+.TP
+.B DHCP Relay
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dhcprelay\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/67
+.PP
+Client Ports:
+.IP \[bu] 2
+67
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol#DHCP_relaying)
+.PP
+Notes
+.RS
+.PP
+From RFC 1812 section 9.1.2:
+.PP
+In many cases, BOOTP clients and their associated BOOTP server(s) do not
+reside on the same IP (sub)network.
+In such cases, a third\-party agent is required to transfer BOOTP
+messages between clients and servers.
+Such an agent was originally referred to as a BOOTP forwarding agent.
+However, to avoid confusion with the IP forwarding function of a router,
+the name BOOTP relay agent has been adopted instead.
+.PP
+For more information about DHCP Relay see section 9.1.2 of RFC
+1812 (http://www.ietf.org/rfc/rfc1812.txt) and section 4 of RFC
+1542 (http://www.ietf.org/rfc/rfc1542.txt)
+.RE
+.RE
+.SS service: dhcpv6
+.TP
+.B Dynamic Host Configuration Protocol for IPv6
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dhcp\ accept
+\ \ client\ dhcp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/547
+.PP
+Client Ports:
+.IP \[bu] 2
+udp/546
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (https://en.wikipedia.org/wiki/DHCPv6)
+.PP
+Notes
+.RS
+.PP
+The dhcp service is implemented as stateless rules.
+It cannot be stateful as the connection tracker will not match a unicast
+reply to a broadcast request.
+Further, if you wish to add src/dst rule parameters, you must account
+for both the broadcast and link\-local network prefixes.
+.PP
+Clients broadcast from a link\-local address to the multicast address
+ff02::1:2 on UDP port 547 to find a server.
+The server sends a unicast reply back to the client which listens on UDP
+port 546.
+.PP
+For a FireHOL interface, creating a client will allow sending to port
+547 and receiving on port 546.
+Creating a server allows sending to port 546 and receiving on port 547.
+.PP
+Unlike DHCP for IPv4, the source ports to be used are not defined in
+DHCPv6 \- see section 5.2 of
+RFC3315 (http://www.ietf.org/rfc/rfc3315.txt).
+Some servers are known to make use of this to send from arbitrary ports,
+so FireHOL does not assume a source port.
+.PP
+This service implicitly sets its client or server to ipv6 mode.
+.RE
+.RE
+.SS service: dict
+.TP
+.B Dictionary Server Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dict\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/2628
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/DICT)
+.PP
+Notes
+.RS
+.PP
+See RFC2229 (http://www.ietf.org/rfc/rfc2229.txt).
+.RE
+.RE
+.SS service: distcc
+.TP
+.B Distributed CC
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ distcc\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3632
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (https://code.google.com/p/distcc/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Distcc)
+.PP
+Notes
+.RS
+.PP
+For distcc security, please check the distcc security
+design (http://distcc.googlecode.com/svn/trunk/doc/web/security.html).
+.RE
+.RE
+.SS service: dns
+.TP
+.B Domain Name System
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ dns\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/53 tcp/53
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Domain_Name_System)
+.PP
+Notes
+.RS
+.PP
+On very busy DNS servers you may see a few dropped DNS packets in your
+logs.
+This is normal.
+The iptables connection tracker will timeout the session and lose
+unmatched DNS packets that arrive too late to be useful.
+.RE
+.RE
+.SS service: echo
+.TP
+.B Echo Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ echo\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/7
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Echo_Protocol)
+.RE
+.SS service: emule
+.TP
+.B eMule (Donkey network client)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ emule\ accept\ src\ 192.0.2.1
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+many
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.emule-project.com)
+.PP
+Notes
+.RS
+.PP
+According to eMule Port
+Definitions (http://www.emule-project.net/home/perl/help.cgi?l=1&rm=show_topic&topic_id=122),
+FireHOL defines:
+.IP \[bu] 2
+Accept from any client port to the server at tcp/4661
+.IP \[bu] 2
+Accept from any client port to the server at tcp/4662
+.IP \[bu] 2
+Accept from any client port to the server at udp/4665
+.IP \[bu] 2
+Accept from any client port to the server at udp/4672
+.IP \[bu] 2
+Accept from any server port to the client at tcp/4662
+.IP \[bu] 2
+Accept from any server port to the client at udp/4672
+.PP
+Use the FireHOL firehol\-client(5) command to match
+the eMule client.
+.PP
+Please note that the eMule client is an HTTP client also.
+.RE
+.RE
+.SS service: eserver
+.TP
+.B eDonkey network server
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ eserver\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/4661 udp/4661 udp/4665
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Eserver)
+.RE
+.SS service: ESP
+.TP
+.B IPSec Encapsulated Security Payload (ESP)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ESP\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+50/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/IPsec#Encapsulating_Security_Payload)
+.PP
+Notes
+.RS
+.PP
+For more information see this Archive of the FreeS/WAN
+documentation (http://web.archive.org/web/20100918134143/http://www.freeswan.org/freeswan_trees/freeswan-1.99/doc/ipsec.html#ESP.ipsec)
+RFC 2406 (http://www.ietf.org/rfc/rfc2406.txt).
+.RE
+.RE
+.SS service: finger
+.TP
+.B Finger Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ finger\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/79
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Finger_protocol)
+.RE
+.SS service: ftp
+.TP
+.B File Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ftp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/21
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_ftp
+CONFIG_NF_CONNTRACK_FTP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_FTP.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_ftp
+CONFIG_NF_NAT_FTP (http://cateee.net/lkddb/web-lkddb/NF_NAT_FTP.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ftp)
+.PP
+Notes
+.RS
+.PP
+The FTP service matches both active and passive FTP connections.
+.RE
+.RE
+.SS service: gift
+.TP
+.B giFT Internet File Transfer
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ gift\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/4302 tcp/1214 tcp/2182 tcp/2472
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://gift.sourceforge.net)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/GiFT)
+.PP
+Notes
+.RS
+.PP
+The gift FireHOL service supports:
+.IP \[bu] 2
+Gnutella listening at tcp/4302
+.IP \[bu] 2
+FastTrack listening at tcp/1214
+.IP \[bu] 2
+OpenFT listening at tcp/2182 and tcp/2472
+.PP
+The above ports are the defaults given for the corresponding giFT
+modules.
+.PP
+To allow access to the user interface ports of giFT, use the
+giftui.
+.RE
+.RE
+.SS service: giftui
+.TP
+.B giFT Internet File Transfer User Interface
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ giftui\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1213
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://gift.sourceforge.net)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/GiFT)
+.PP
+Notes
+.RS
+.PP
+This service refers only to the user interface ports offered by giFT.
+To allow gift accept P2P requests, use the gift.
+.RE
+.RE
+.SS service: gkrellmd
+.TP
+.B GKrellM Daemon
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ gkrellmd\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/19150
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://gkrellm.net/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Gkrellm)
+.RE
+.SS service: GRE
+.TP
+.B Generic Routing Encapsulation
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ GRE\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+47/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_proto_gre
+CONFIG_NF_CT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_CT_PROTO_GRE.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_proto_gre
+CONFIG_NF_NAT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_NAT_PROTO_GRE.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Generic_Routing_Encapsulation)
+.PP
+Notes
+.RS
+.PP
+Protocol No 47.
+.PP
+For more information see RFC RFC
+2784 (http://www.ietf.org/rfc/rfc2784.txt).
+.RE
+.RE
+.SS service: h323
+.TP
+.B H.323 VoIP
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ h323\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1720 tcp/1720
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_h323
+CONFIG_NF_CONNTRACK_H323 (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_H323.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_h323
+CONFIG_NF_NAT_H323 (http://cateee.net/lkddb/web-lkddb/NF_NAT_H323.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/H323)
+.RE
+.SS service: heartbeat
+.TP
+.B HeartBeat
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ heartbeat\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/690:699
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.linux-ha.org/)
+.PP
+Notes
+.RS
+.PP
+This FireHOL service has been designed such a way that it will allow
+multiple heartbeat clusters on the same LAN.
+.RE
+.RE
+.SS service: http
+.TP
+.B Hypertext Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ http\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/80
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Http)
+.RE
+.SS service: httpalt
+.TP
+.B HTTP alternate port
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ httpalt\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/8080
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Http)
+.PP
+Notes
+.RS
+.PP
+This port is commonly used by web servers, web proxies and caches where
+the standard http port is not available or can or should
+not be used.
+.RE
+.RE
+.SS service: https
+.TP
+.B Secure Hypertext Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ https\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/443
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Https)
+.RE
+.SS service: hylafax
+.TP
+.B HylaFAX
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ hylafax\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+many
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.hylafax.org/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Hylafax)
+.PP
+Notes
+.RS
+.PP
+This service allows incoming requests to server port tcp/4559 and
+outgoing from server port tcp/4558.
+.PP
+The correct operation of this service has not been verified.
+.PP
+USE THIS WITH CARE.
+A HYLAFAX CLIENT MAY OPEN ALL TCP UNPRIVILEGED PORTS TO ANYONE (from
+port tcp/4558).
+.RE
+.RE
+.SS service: iax
+.TP
+.B Inter\-Asterisk eXchange
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ iax\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/5036
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.asterisk.org)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Iax)
+.PP
+Notes
+.RS
+.PP
+This service refers to IAX version 1.
+There is also iax2.
+.RE
+.RE
+.SS service: iax2
+.TP
+.B Inter\-Asterisk eXchange v2
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ iax2\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/5469 udp/4569
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.asterisk.org)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Iax)
+.PP
+Notes
+.RS
+.PP
+This service refers to IAX version 2.
+There is also iax.
+.RE
+.RE
+.SS service: ICMP
+.TP
+.B Internet Control Message Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ICMP\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+icmp/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Internet_Control_Message_Protocol)
+.RE
+.SS service: icmp
+.TP
+.B Internet Control Message Protocol
+Alias for ICMP
+.RS
+.RE
+.SS service: ICMPV6
+.TP
+.B Internet Control Message Protocol v6
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ICMPV6\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+icmpv6/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/ICMPv6)
+.RE
+.SS service: icmpv6
+.TP
+.B Internet Control Message Protocol v6
+Alias for ICMPV6
+.RS
+.RE
+.SS service: icp
+.TP
+.B Internet Cache Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ icp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/3130
+.PP
+Client Ports:
+.IP \[bu] 2
+3130
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Internet_Cache_Protocol)
+.RE
+.SS service: ident
+.TP
+.B Identification Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ident\ reject\ with\ tcp\-reset
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/113
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ident_protocol)
+.RE
+.SS service: imap
+.TP
+.B Internet Message Access Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ imap\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/143
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Imap)
+.RE
+.SS service: imaps
+.TP
+.B Secure Internet Message Access Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ imaps\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/993
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Imap)
+.RE
+.SS service: ipsecnatt
+.TP
+.B NAT traversal and IPsec
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/4500
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/NAT_traversal#IPsec_traversal_across_NAT)
+.RE
+.SS service: ipv6error
+.TP
+.B ICMPv6 Error Handling
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ipv6error\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Notes
+.RS
+.PP
+Not all icmpv6 error types should be treated equally inbound and
+outbound.
+.PP
+The ipv6error rule wraps all of them in the following way: * allow
+incoming messages only for existing sessions * allow outgoing messages
+always
+.PP
+The following ICMPv6 messages are handled:
+.IP \[bu] 2
+destination\-unreachable
+.IP \[bu] 2
+packet\-too\-big
+.IP \[bu] 2
+ttl\-zero\-during\-transit
+.IP \[bu] 2
+ttl\-zero\-during\-reassembly
+.IP \[bu] 2
+unknown\-header\-type
+.IP \[bu] 2
+unknown\-option
+.PP
+Interfaces should always have this set:
+.PP
+\f[C]server\ ipv6error\ accept\f[]
+.PP
+In a router with inface being internal and outface being external the
+following will meet the recommendations of RFC
+4890 (http://tools.ietf.org/html/rfc4890):
+.PP
+\f[C]server\ ipv6error\ accept\f[]
+.PP
+Do not use: \f[C]client\ ipv6error\ accept\f[] unless you are
+controlling traffic on a router interface where outface is the internal
+destination.
+.PP
+This service implicitly sets its client or server to ipv6 mode.
+.RE
+.RE
+.SS service: ipv6mld
+.TP
+.B IPv6 Multicast Listener Discovery for IPv6
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ ipv6mld\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (https://en.wikipedia.org/wiki/Multicast_Listener_Discovery)
+.PP
+Notes
+.RS
+.PP
+IPv6 uses Multicast Listener Discovery to discover multicast listeners
+and what they are listening for.
+.PP
+In practice all IPv6 nodes are multicast listeners since multicast is
+used in the neighbour discovery protocol which replaces ARP in IPv4.
+.PP
+These rules are stateless since reports can happen automatically as well
+as on query.
+.PP
+Unless muticast snooping is disabled across the network, MLD should be
+enabled for any clients:
+.PP
+\f[C]client\ ipv6mld\ accept\f[]
+.PP
+MLD should also be enabled as a server on any hosts acting as a router:
+.PP
+\f[C]server\ ipv6mld\ accept\f[]
+.PP
+The rules should generally not be used to pass packets across a firewall
+(e.g.
+in a router definition) unless the firewall is for a bridge.
+.PP
+This service implicitly sets its client or server to ipv6 mode.
+.RE
+.RE
+.SS service: ipv6neigh
+.TP
+.B IPv6 Neighbour discovery
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ ipv6neigh\ accept
+\ \ server\ ipv6neigh\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (https://en.wikipedia.org/wiki/Neighbor_Discovery_Protocol)
+.PP
+Notes
+.RS
+.PP
+IPv6 uses the Neighbour Discovery Protocol to do automatic configuration
+of routes and to replace ARP.
+To allow this functionality the network neighbour and router
+solicitation/advertisement messages should be enabled on each interface.
+.PP
+These rules are stateless since advertisement can happen automatically
+as well as on solicitation.
+.PP
+Neighbour discovery (incoming) should always be enabled:
+.PP
+\f[C]server\ ipv6neigh\ accept\f[]
+.PP
+Neighbour advertisement (outgoing) should always be enabled:
+.PP
+\f[C]client\ ipv6neigh\ accept\f[]
+.PP
+The rules should not be used to pass packets across a firewall (e.g.
+in a router definition) unless the firewall is for a bridge.
+.PP
+This service implicitly sets its client or server to ipv6 mode.
+.RE
+.RE
+.SS service: ipv6router
+.TP
+.B IPv6 Router discovery
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ ipv6router\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (https://en.wikipedia.org/wiki/Neighbor_Discovery_Protocol)
+.PP
+Notes
+.RS
+.PP
+IPv6 uses the Neighbour Discovery Protocol to do automatic configuration
+of routes and to replace ARP.
+To allow this functionality the network neighbour and router
+solicitation/advertisement messages should be enabled on each interface.
+.PP
+These rules are stateless since advertisement can happen automatically
+as well as on solicitation.
+.PP
+Router discovery (incoming) should always be enabled:
+.PP
+\f[C]client\ ipv6router\ accept\f[]
+.PP
+Router advertisement (outgoing) should be enabled on a host that routes:
+.PP
+\f[C]server\ ipv6router\ accept\f[]
+.PP
+The rules should not be used to pass packets across a firewall (e.g.
+in a router definition) unless the firewall is for a bridge.
+.PP
+This service implicitly sets its client or server to ipv6 mode.
+.RE
+.RE
+.SS service: irc
+.TP
+.B Internet Relay Chat
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ irc\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/6667
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_irc
+CONFIG_NF_CONNTRACK_IRC (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_IRC.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_irc
+CONFIG_NF_NAT_IRC (http://cateee.net/lkddb/web-lkddb/NF_NAT_IRC.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Internet_Relay_Chat)
+.RE
+.SS service: isakmp
+.TP
+.B Internet Security Association and Key Management Protocol (IKE)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ isakmp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/500
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/ISAKMP)
+.PP
+Notes
+.RS
+.PP
+For more information see the Archive of the FreeS/WAN
+documentation (http://web.archive.org/web/20100918134143/http://www.freeswan.org/freeswan_trees/freeswan-1.99/doc/ipsec.html#IKE.ipsec)
+.RE
+.RE
+.SS service: jabber
+.TP
+.B Extensible Messaging and Presence Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ jabber\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5222 tcp/5223
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Jabber)
+.PP
+Notes
+.RS
+.PP
+Allows clear and SSL client\-to\-server connections.
+.RE
+.RE
+.SS service: jabberd
+.TP
+.B Extensible Messaging and Presence Protocol (Server)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ jabberd\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5222 tcp/5223 tcp/5269
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Jabber)
+.PP
+Notes
+.RS
+.PP
+Allows clear and SSL client\-to\-server and server\-to\-server
+connections.
+.PP
+Use this service for a jabberd server.
+In all other cases, use the jabber.
+.RE
+.RE
+.SS service: l2tp
+.TP
+.B Layer 2 Tunneling Protocol
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1701
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/L2tp)
+.RE
+.SS service: ldap
+.TP
+.B Lightweight Directory Access Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ldap\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/389
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ldap)
+.RE
+.SS service: ldaps
+.TP
+.B Secure Lightweight Directory Access Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ldaps\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/636
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ldap)
+.RE
+.SS service: lpd
+.TP
+.B Line Printer Daemon Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ lpd\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/515
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Line_Printer_Daemon_protocol)
+.PP
+Notes
+.RS
+.PP
+LPD is documented in RFC 1179 (http://www.ietf.org/rfc/rfc1179.txt).
+.PP
+Since many operating systems incorrectly use the non\-default client
+ports for LPD access, this definition allows any client port to access
+the service (in addition to the RFC defined 721 to 731 inclusive).
+.RE
+.RE
+.SS service: microsoft_ds
+.TP
+.B Direct Hosted (NETBIOS\-less) SMB
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ microsoft_ds\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/445
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Notes
+.RS
+.PP
+Direct Hosted (i.e.
+NETBIOS\-less SMB)
+.PP
+This is another NETBIOS Session Service with minor differences with
+netbios_ssn.
+It is supported only by Windows 2000 and Windows XP and it offers the
+advantage of being independent of WINS for name resolution.
+.PP
+It seems that samba supports transparently this protocol on the
+netbios_ssn ports, so that either direct hosted
+or traditional SMB can be served simultaneously.
+.PP
+Please refer to the netbios_ssn for more
+information.
+.RE
+.RE
+.SS service: mms
+.TP
+.B Microsoft Media Server
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ mms\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1755 udp/1755
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+See
+here (http://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-5.html#ss5.5).
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+See
+here (http://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-5.html#ss5.5).
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Microsoft_Media_Server)
+.PP
+Notes
+.RS
+.PP
+Microsoft\[aq]s proprietary network streaming protocol used to transfer
+unicast data in Windows Media Services (previously called NetShow
+Services).
+.RE
+.RE
+.SS service: msn
+.TP
+.B Microsoft MSN Messenger Service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ msn\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1863 udp/1863
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.RE
+.SS service: msnp
+.TP
+.B msnp
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ msnp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/6891
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.RE
+.SS service: ms_ds
+.TP
+.B Direct Hosted (NETBIOS\-less) SMB
+Alias for microsoft_ds
+.RS
+.RE
+.SS service: multicast
+.TP
+.B Multicast
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ multicast\ reject\ with\ proto\-unreach
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Multicast)
+.PP
+Notes
+.RS
+.PP
+The multicast service matches all packets sent to the $MULTICAST_IPS
+addresses using IGMP or UDP.
+For IPv4 that means 224.0.0.0/4 and for IPv6 FF00::/16.
+.RE
+.RE
+.SS service: mysql
+.TP
+.B MySQL
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ mysql\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3306
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.mysql.com/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Mysql)
+.RE
+.SS service: netbackup
+.TP
+.B Veritas NetBackup service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ netbackup\ accept
+\ \ client\ netbackup\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/13701 tcp/13711 tcp/13720 tcp/13721 tcp/13724 tcp/13782 tcp/13783
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Netbackup)
+.PP
+Notes
+.RS
+.PP
+To use this service you must define it as both client and server in
+NetBackup clients and NetBackup servers.
+.RE
+.RE
+.SS service: netbios_dgm
+.TP
+.B NETBIOS Datagram Distribution Service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ netbios_dgm\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/138
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Netbios#Datagram_distribution_service)
+.PP
+Notes
+.RS
+.PP
+See also the samba.
+.PP
+Keep in mind that this service broadcasts (to the broadcast address of
+your LAN) UDP packets.
+If you place this service within an interface that has a dst parameter,
+remember to include (in the dst parameter) the broadcast address of your
+LAN too.
+.RE
+.RE
+.SS service: netbios_ns
+.TP
+.B NETBIOS Name Service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ netbios_ns\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/137
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Netbios#Name_service)
+.PP
+Notes
+.RS
+.PP
+See also the samba.
+.RE
+.RE
+.SS service: netbios_ssn
+.TP
+.B NETBIOS Session Service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ netbios_ssn\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/139
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Netbios#Session_service)
+.PP
+Notes
+.RS
+.PP
+See also the samba.
+.PP
+Please keep in mind that newer NETBIOS clients prefer to use port 445
+(microsoft_ds) for the NETBIOS session service,
+and when this is not available they fall back to port 139 (netbios_ssn).
+Versions of samba above 3.x bind automatically to ports 139 and 445.
+.PP
+If you have an older samba version and your policy on an interface or
+router is DROP, clients trying to access port 445 will have to timeout
+before falling back to port 139.
+This timeout can be up to several minutes.
+.PP
+To overcome this problem you can explicitly REJECT the
+microsoft_ds with a tcp\-reset message:
+.PP
+server microsoft_ds reject with tcp\-reset
+.RE
+.RE
+.SS service: nfs
+.TP
+.B Network File System
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ nfs\ accept\ dst\ 192.0.2.1
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Network_File_System_%28protocol%29)
+.PP
+Notes
+.RS
+.PP
+The NFS service queries the RPC service on the NFS server host to find
+out the ports nfsd, mountd, lockd and rquotad are listening.
+Then, according to these ports it sets up rules on all the supported
+protocols (as reported by RPC) in order the clients to be able to reach
+the server.
+.PP
+For this reason, the NFS service requires that:
+.IP \[bu] 2
+the firewall is restarted if the NFS server is restarted
+.IP \[bu] 2
+the NFS server must be specified on all nfs statements (only if it is
+not the localhost)
+.PP
+Since NFS queries the remote RPC server, it is required to also be
+allowed to do so, by allowing the portmap too.
+Take care that this is allowed by the running firewall when FireHOL
+tries to query the RPC server.
+So you might have to setup NFS in two steps: First add the portmap
+service and activate the firewall, then add the NFS service and restart
+the firewall.
+.PP
+To avoid this you can setup your NFS server to listen on pre\-defined
+ports, as documented in NFS
+Howto (http://nfs.sourceforge.net/nfs-howto/ar01s06.html#nfs_firewalls).
+If you do this then you will have to define the the ports using the
+procedure described in Adding Services in
+firehol.conf(5).
+.RE
+.RE
+.SS service: nis
+.TP
+.B Network Information Service
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ nis\ accept\ dst\ 192.0.2.1
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Network_Information_Service)
+.PP
+Notes
+.RS
+.PP
+The nis service queries the RPC service on the nis server host to find
+out the ports ypserv and yppasswdd are listening.
+Then, according to these ports it sets up rules on all the supported
+protocols (as reported by RPC) in order the clients to be able to reach
+the server.
+.PP
+For this reason, the nis service requires that:
+.IP \[bu] 2
+the firewall is restarted if the nis server is restarted
+.IP \[bu] 2
+the nis server must be specified on all nis statements (only if it is
+not the localhost)
+.PP
+Since nis queries the remote RPC server, it is required to also be
+allowed to do so, by allowing the portmap too.
+Take care that this is allowed by the running firewall when FireHOL
+tries to query the RPC server.
+So you might have to setup nis in two steps: First add the portmap
+service and activate the firewall, then add the nis service and restart
+the firewall.
+.PP
+This service was added to FireHOL by Carlos
+Rodrigues (http://sourceforge.net/p/firehol/feature-requests/20/).
+His comments regarding this implementation, are:
+.PP
+These rules work for client access only!
+.PP
+Pushing changes to slave servers won\[aq]t work if these rules are
+active somewhere between the master and its slaves, because it is
+impossible to predict the ports where yppush will be listening on each
+push.
+.PP
+Pulling changes directly on the slaves will work, and could be improved
+performance\-wise if these rules are modified to open fypxfrd.
+This wasn\[aq]t done because it doesn\[aq]t make that much sense since
+pushing changes on the master server is the most common, and
+recommended, way to replicate maps.
+.RE
+.RE
+.SS service: nntp
+.TP
+.B Network News Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ nntp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/119
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Nntp)
+.RE
+.SS service: nntps
+.TP
+.B Secure Network News Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ nntps\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/563
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Nntp)
+.RE
+.SS service: nrpe
+.TP
+.B Nagios NRPE
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5666
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Nagios#NRPE)
+.RE
+.SS service: ntp
+.TP
+.B Network Time Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ntp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/123 tcp/123
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Network_Time_Protocol)
+.RE
+.SS service: nut
+.TP
+.B Network UPS Tools
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ nut\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3493 udp/3493
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.networkupstools.org/)
+.RE
+.SS service: nxserver
+.TP
+.B NoMachine NX Server
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ nxserver\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5000:5200
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/NX_Server)
+.PP
+Notes
+.RS
+.PP
+Default ports used by NX server for connections without encryption.
+.PP
+Note that nxserver also needs the ssh to be enabled.
+.PP
+This information has been extracted from this The TCP ports used by
+nxserver are 4000 + DISPLAY_BASE to 4000 + DISPLAY_BASE + DISPLAY_LIMIT.
+DISPLAY_BASE and DISPLAY_LIMIT are set in /usr/NX/etc/node.conf and the
+defaults are DISPLAY_BASE=1000 and DISPLAY_LIMIT=200.
+.PP
+For encrypted nxserver sessions, only ssh is needed.
+.RE
+.RE
+.SS service: openvpn
+.TP
+.B OpenVPN
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1194 udp/1194
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://openvpn.net/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/OpenVPN)
+.RE
+.SS service: oracle
+.TP
+.B Oracle Database
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ oracle\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1521
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Oracle_db)
+.RE
+.SS service: OSPF
+.TP
+.B Open Shortest Path First
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ OSPF\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+89/any
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ospf)
+.RE
+.SS service: ping
+.TP
+.B Ping (ICMP echo)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ping\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Ping)
+.PP
+Notes
+.RS
+.PP
+This services matches requests of protocol ICMP and type echo\-request
+(TYPE=8) and their replies of type echo\-reply (TYPE=0).
+.PP
+The ping service is stateful.
+.RE
+.RE
+.SS service: pop3
+.TP
+.B Post Office Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ pop3\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/110
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Pop3)
+.RE
+.SS service: pop3s
+.TP
+.B Secure Post Office Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ pop3s\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/995
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Pop3)
+.RE
+.SS service: portmap
+.TP
+.B Open Network Computing Remote Procedure Call \- Port Mapper
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ portmap\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/111 tcp/111
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Portmap)
+.RE
+.SS service: postgres
+.TP
+.B PostgreSQL
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ postgres\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5432
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Postgres)
+.RE
+.SS service: pptp
+.TP
+.B Point\-to\-Point Tunneling Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ pptp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1723
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_pptp
+CONFIG_NF_CONNTRACK_PPTP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_PPTP.html)
+.IP \[bu] 2
+nf_conntrack_proto_gre
+CONFIG_NF_CT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_CT_PROTO_GRE.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_pptp
+CONFIG_NF_NAT_PPTP (http://cateee.net/lkddb/web-lkddb/NF_NAT_PPTP.html)
+.IP \[bu] 2
+nf_nat_proto_gre
+CONFIG_NF_NAT_PROTO_GRE (http://cateee.net/lkddb/web-lkddb/NF_NAT_PROTO_GRE.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Pptp)
+.RE
+.SS service: privoxy
+.TP
+.B Privacy Proxy
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ privoxy\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/8118
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.privoxy.org/)
+.RE
+.SS service: radius
+.TP
+.B Remote Authentication Dial In User Service (RADIUS)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ radius\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1812 udp/1813
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/RADIUS)
+.RE
+.SS service: radiusold
+.TP
+.B Remote Authentication Dial In User Service (RADIUS)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ radiusold\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1645 udp/1646
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/RADIUS)
+.RE
+.SS service: radiusoldproxy
+.TP
+.B Remote Authentication Dial In User Service (RADIUS)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ radiusoldproxy\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1647
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/RADIUS)
+.RE
+.SS service: radiusproxy
+.TP
+.B Remote Authentication Dial In User Service (RADIUS)
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ radiusproxy\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1814
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/RADIUS)
+.RE
+.SS service: rdp
+.TP
+.B Remote Desktop Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ rdp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3389
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Remote_Desktop_Protocol)
+.PP
+Notes
+.RS
+.PP
+Remote Desktop Protocol is also known also as Terminal Services.
+.RE
+.RE
+.SS service: rndc
+.TP
+.B Remote Name Daemon Control
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ rndc\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/953
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Rndc)
+.RE
+.SS service: rsync
+.TP
+.B rsync protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ rsync\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/873 udp/873
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://rsync.samba.org/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Rsync)
+.RE
+.SS service: rtp
+.TP
+.B Real\-time Transport Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ rtp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/10000:20000
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Real-time_Transport_Protocol)
+.PP
+Notes
+.RS
+.PP
+RTP ports are generally all the UDP ports.
+This definition narrows down RTP ports to UDP 10000 to 20000.
+.RE
+.RE
+.SS service: samba
+.TP
+.B Samba
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ samba\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.samba.org/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Samba_(software))
+.PP
+Notes
+.RS
+.PP
+The samba service automatically sets all the rules for
+netbios_ns, netbios_dgm,
+netbios_ssn and
+microsoft_ds.
+.PP
+Please refer to the notes of the above services for more information.
+.PP
+NETBIOS initiates based on the broadcast address of an interface
+(request goes to broadcast address) but the server responds from its own
+IP address.
+This makes the "server samba accept" statement drop the server reply,
+because of the way the iptables connection tracker works.
+.PP
+This service definition includes a hack, that allows a Linux samba
+server to respond correctly in such situations, by allowing new outgoing
+connections from the well known netbios_ns port to
+the clients high ports.
+.PP
+However, for clients and routers this hack is not applied because it
+would open all unprivileged ports to the samba server.
+The only solution to overcome the problem in such cases (routers or
+clients) is to build a trust relationship between the samba servers and
+clients.
+.RE
+.RE
+.SS service: sane
+.TP
+.B SANE Scanner service
+Service Type:
+.RS
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/6566
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_sane
+CONFIG_NF_CONNTRACK_SANE (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_SANE.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.sane-project.org/)
+.RE
+.SS service: sip
+.TP
+.B Session Initiation Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ sip\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5060 udp/5060
+.PP
+Client Ports:
+.IP \[bu] 2
+5060 default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_sip
+CONFIG_NF_CONNTRACK_SIP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_SIP.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_sip
+CONFIG_NF_NAT_SIP (http://cateee.net/lkddb/web-lkddb/NF_NAT_SIP.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Session_Initiation_Protocol)
+.PP
+Notes
+.RS
+.PP
+SIP (http://www.voip-info.org/wiki/view/SIP) is an IETF standard
+protocol (RFC 2543) for initiating interactive user sessions involving
+multimedia elements such as video, voice, chat, gaming, etc.
+SIP works in the application layer of the OSI communications model.
+.RE
+.RE
+.SS service: smtp
+.TP
+.B Simple Mail Transport Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ smtp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/25
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol)
+.RE
+.SS service: smtps
+.TP
+.B Secure Simple Mail Transport Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ smtps\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/465
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/SMTPS)
+.RE
+.SS service: snmp
+.TP
+.B Simple Network Management Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ snmp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/161
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Simple_Network_Management_Protocol)
+.RE
+.SS service: snmptrap
+.TP
+.B SNMP Trap
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ snmptrap\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/162
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Simple_Network_Management_Protocol#Trap)
+.PP
+Notes
+.RS
+.PP
+An SNMP trap is a notification from an agent to a manager.
+.RE
+.RE
+.SS service: socks
+.TP
+.B SOCKet Secure
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ socks\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/1080 udp/1080
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/SOCKS)
+.PP
+Notes
+.RS
+.PP
+See also RFC 1928 (http://www.ietf.org/rfc/rfc1928.txt).
+.RE
+.RE
+.SS service: squid
+.TP
+.B Squid Web Cache
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ squid\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/3128
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.squid-cache.org/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Squid_(software))
+.RE
+.SS service: ssh
+.TP
+.B Secure Shell Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ ssh\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/22
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Secure_Shell)
+.RE
+.SS service: stun
+.TP
+.B Session Traversal Utilities for NAT
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ stun\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/3478 udp/3479
+.PP
+Client Ports:
+.IP \[bu] 2
+any
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/STUN)
+.PP
+Notes
+.RS
+.PP
+STUN (http://www.voip-info.org/wiki/view/STUN) is a protocol for
+assisting devices behind a NAT firewall or router with their packet
+routing.
+.RE
+.RE
+.SS service: submission
+.TP
+.B SMTP over SSL/TLS submission
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ submission\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/587
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol)
+.PP
+Notes
+.RS
+.PP
+Submission is essentially normal SMTP with an SSL/TLS negotiation.
+.RE
+.RE
+.SS service: sunrpc
+.TP
+.B Open Network Computing Remote Procedure Call \- Port Mapper
+Alias for portmap
+.RS
+.RE
+.SS service: swat
+.TP
+.B Samba Web Administration Tool
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ swat\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/901
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/SWAT.html)
+.RE
+.SS service: syslog
+.TP
+.B Syslog Remote Logging Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ syslog\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/514
+.PP
+Client Ports:
+.IP \[bu] 2
+514 default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Syslog)
+.RE
+.SS service: telnet
+.TP
+.B Telnet
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ telnet\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/23
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Telnet)
+.RE
+.SS service: tftp
+.TP
+.B Trivial File Transfer Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ tftp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/69
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Netfilter Modules
+.IP \[bu] 2
+nf_conntrack_tftp
+CONFIG_NF_CONNTRACK_TFTP (http://cateee.net/lkddb/web-lkddb/NF_CONNTRACK_TFTP.html)
+.PP
+Netfilter NAT Modules
+.IP \[bu] 2
+nf_nat_tftp
+CONFIG_NF_NAT_TFTP (http://cateee.net/lkddb/web-lkddb/NF_NAT_TFTP.html)
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Trivial_File_Transfer_Protocol)
+.RE
+.SS service: time
+.TP
+.B Time Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ time\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/37 udp/37
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Time_Protocol)
+.RE
+.SS service: timestamp
+.TP
+.B ICMP Timestamp
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ timestamp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+N/A
+.PP
+Client Ports:
+.IP \[bu] 2
+N/A
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Timestamp)
+.PP
+Notes
+.RS
+.PP
+This services matches requests of protocol ICMP and type
+timestamp\-request (TYPE=13) and their replies of type timestamp\-reply
+(TYPE=14).
+.PP
+The timestamp service is stateful.
+.RE
+.RE
+.SS service: tomcat
+.TP
+.B HTTP alternate port
+Alias for httpalt
+.RS
+.RE
+.SS service: upnp
+.TP
+.B Universal Plug and Play
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ upnp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/1900 tcp/2869
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://upnp.sourceforge.net/)
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Universal_Plug_and_Play)
+.PP
+Notes
+.RS
+.PP
+For a Linux implementation see: Linux
+IGD (http://linux-igd.sourceforge.net/).
+.RE
+.RE
+.SS service: uucp
+.TP
+.B Unix\-to\-Unix Copy
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ uucp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/540
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/UUCP)
+.RE
+.SS service: vmware
+.TP
+.B vmware
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ vmware\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/902
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Notes
+.RS
+.PP
+Used from VMWare 1 and up.
+See the VMWare
+KnowledgeBase (http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1012382).
+.RE
+.RE
+.SS service: vmwareauth
+.TP
+.B vmwareauth
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ vmwareauth\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/903
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Notes
+.RS
+.PP
+Used from VMWare 1 and up.
+See the VMWare
+KnowledgeBase (http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1012382).
+.RE
+.RE
+.SS service: vmwareweb
+.TP
+.B vmwareweb
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ vmwareweb\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/8222 tcp/8333
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Notes
+.RS
+.PP
+Used from VMWare 2 and up.
+See VMWare Server 2.0 release
+notes (http://www.vmware.com/support/server2/doc/releasenotes_vmserver2.html)
+and the VMWare
+KnowledgeBase (http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1012382).
+.RE
+.RE
+.SS service: vnc
+.TP
+.B Virtual Network Computing
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ vnc\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/5900:5903
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Virtual_Network_Computing)
+.PP
+Notes
+.RS
+.PP
+VNC is a graphical desktop sharing protocol.
+.RE
+.RE
+.SS service: webcache
+.TP
+.B HTTP alternate port
+Alias for httpalt
+.RS
+.RE
+.SS service: webmin
+.TP
+.B Webmin Administration System
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ webmin\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/10000
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Homepage (http://www.webmin.com/)
+.RE
+.SS service: whois
+.TP
+.B WHOIS Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ whois\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+tcp/43
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/Whois)
+.RE
+.SS service: xbox
+.TP
+.B Xbox Live
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ client\ xbox\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+complex
+.PP
+Server Ports:
+.IP \[bu] 2
+many
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Notes
+.RS
+.PP
+Definition for the Xbox live service.
+.PP
+See program source for contributor details.
+.RE
+.RE
+.SS service: xdmcp
+.TP
+.B X Display Manager Control Protocol
+Example:
+.RS
+.IP
+.nf
+\f[C]
+\ \ server\ xdmcp\ accept
+\f[]
+.fi
+.PP
+Service Type:
+.IP \[bu] 2
+simple
+.PP
+Server Ports:
+.IP \[bu] 2
+udp/177
+.PP
+Client Ports:
+.IP \[bu] 2
+default
+.PP
+Links
+.IP \[bu] 2
+Wikipedia (http://en.wikipedia.org/wiki/X_display_manager_(program_type)#X_Display_Manager_Control_Protocol)
+.PP
+Notes
+.RS
+.PP
+See Gnome Display
+Manager (http://www.jirka.org/gdm-documentation/x70.html) for a
+discussion about XDMCP and firewalls (Gnome Display Manager is a
+replacement for XDM).
+.RE
+.RE
+.SH AUTHORS
+FireHOL Team.

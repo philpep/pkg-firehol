@@ -1,0 +1,92 @@
+.TH "firehol\-client" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-client \- client command
+.SH SYNOPSIS
+.PP
+{ client | client46 } \f[I]service\f[] \f[I]action\f[]
+[\f[I]rule\-params\f[]]
+.PP
+client4 \f[I]service\f[] \f[I]action\f[] [\f[I]rule\-params\f[]]
+.PP
+client6 \f[I]service\f[] \f[I]action\f[] [\f[I]rule\-params\f[]]
+.SH DESCRIPTION
+.PP
+The \f[C]client\f[] subcommand defines a client of a service on an
+interface or router.
+Any \f[I]rule\-params\f[] given to a parent interface or router are
+inherited by the client, but are reversed.
+.PP
+For FireHOL a client is the source of a request.
+Even though this is more complex for some multi\-socket services, to
+FireHOL a client always initiates the connection.
+.PP
+The \f[I]service\f[] parameter is one of the supported service names
+from firehol\-services(5).
+Multiple services may be specified, space delimited in quotes.
+.PP
+The \f[I]action\f[] can be any of the actions listed in
+firehol\-actions(5).
+.PP
+The \f[I]rule\-params\f[] define a set of rule parameters to further
+restrict the traffic that is matched to this service.
+See firehol\-params(5) for more details.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+Writing \f[C]client4\f[] is equivalent to writing \f[C]ipv4\ client\f[]
+and ensures this subcommand is applied only in the IPv4 firewall rules.
+.PP
+Writing \f[C]client6\f[] is equivalent to writing \f[C]ipv6\ client\f[]
+and ensures this subcommand is applied only in the IPv6 firewall rules.
+.PP
+Writing \f[C]client46\f[] is equivalent to writing \f[C]both\ client\f[]
+and ensures this subcommand is applied in both the IPv4 and IPv6
+firewall rules; it cannot be used as part an interface or router that is
+IPv4 or IPv6 only.
+.PP
+The default \f[C]client\f[] inherits its behaviour from the enclosing
+interface or router.
+.RE
+.SH EXAMPLES
+.IP
+.nf
+\f[C]
+client\ smtp\ accept
+
+client\ "smtp\ pop3"\ accept
+
+client\ smtp\ accept\ src\ 192.0.2.1
+
+client\ smtp\ accept\ log\ "mail\ packet"\ src\ 192.0.2.1
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-modifiers(5) \- ipv4/ipv6 selection
+.IP \[bu] 2
+firehol\-services(5) \- services list
+.IP \[bu] 2
+firehol\-actions(5) \- actions for rules
+.IP \[bu] 2
+firehol\-params(5) \- optional rule parameters
+.IP \[bu] 2
+firehol\-server(5) \- server subcommand
+.IP \[bu] 2
+firehol\-interface(5) \- interface definition
+.IP \[bu] 2
+firehol\-router(5) \- router definition
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

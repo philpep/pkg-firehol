@@ -6,9 +6,19 @@
 
 firehol-connmark - set a stateful mark on a connection
 
+<!--
+contents-table:helper:connmark:keyword-firehol-connmark:Y:-:Set a stateful mark from the `connmark` group.
+  -->
+
 # SYNOPSIS
 
-connmark { value | save | restore } *chain* *rule-params*
+*Warning - this manual page is out of date for nightly build/v3 behaviour*
+
+{ connmark | connmark46 } { value | save | restore } *chain* *rule-params*
+
+connmark4 { value | save | restore } *chain* *rule-params*
+
+connmark6 { value | save | restore } *chain* *rule-params*
 
 # DESCRIPTION
 
@@ -67,5 +77,5 @@ pick the correct routing table based on the mark on the packets.
 * ip(8) - show / manipulate routing, devices, policy routing and tunnels
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 * [Linux Advanced Routing & Traffic Control HOWTO](http://lartc.org/howto/)

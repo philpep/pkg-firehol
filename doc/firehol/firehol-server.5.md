@@ -6,6 +6,10 @@
 
 firehol-server - server, route commands: accept requests to a service
 
+<!--
+contents-table:subcommand:server:keyword-firehol-server:Y:sport dport:Allow access to a server running on the `interface` or the protected `router` hosts.
+  -->
+
 # SYNOPSIS
 
 { server | server46 } *service* *action* *rule-params*
@@ -97,4 +101,4 @@ server smtp accept log "mail packet" src 192.0.2.1
 * [firehol-router(5)][keyword-firehol-router] - router definition
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
