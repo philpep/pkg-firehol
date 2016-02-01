@@ -1,0 +1,192 @@
+.TH "firehol" "1" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol \- an easy to use but powerful iptables stateful firewall
+.SH SYNOPSIS
+.PP
+firehol
+.PP
+sudo \-E firehol panic [ \f[I]IP\f[] ]
+.PP
+firehol \f[I]command\f[] [ \-\- \f[I]conf\-arg\f[]...
+]
+.PP
+firehol \f[I]CONFIGFILE\f[] [start|debug|try] [\-\-
+\f[I]conf\-arg\f[]...
+]
+.SH DESCRIPTION
+.PP
+Running \f[C]firehol\f[] invokes iptables(8) to manipulate your
+firewall.
+.PP
+Run without any arguments, \f[C]firehol\f[] will present some help on
+usage.
+.PP
+When given \f[I]CONFIGFILE\f[], \f[C]firehol\f[] will use the named file
+instead of \f[C]/etc/firehol/firehol.conf\f[] as its configuration.
+If no \f[I]command\f[] is given, \f[C]firehol\f[] assumes \f[C]try\f[].
+.PP
+It is possible to pass arguments for use by the configuration file
+separating any conf\-arg values from the rest of the arguments with
+\f[C]\-\-\f[].
+The arguments are accessible in the configuration using standard bash(1)
+syntax e.g.
+$1, $2, etc.
+.SS PANIC
+.PP
+To block all communication, invoke \f[C]firehol\f[] with the
+\f[C]panic\f[] command.
+.PP
+FireHOL removes all rules from the running firewall and then DROPs all
+traffic on all iptables(8) tables (mangle, nat, filter) and pre\-defined
+chains (PREROUTING, INPUT, FORWARD, OUTPUT, POSTROUTING).
+.PP
+DROPing is not done by changing the default policy to DROP, but by
+adding one rule per table/chain to drop all traffic.
+This allows systems which do not reset all the chains to ACCEPT when
+starting to function correctly.
+.PP
+When activating panic mode, FireHOL checks for the existence of the
+SSH_CLIENT shell environment variable, which is set by ssh(1).
+If it finds this, then panic mode will allow the established SSH
+connection specified in this variable to operate.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+In order for FireHOL to see the environment variable you must ensure
+that it is preserved.
+For sudo(8) use the \f[C]\-E\f[] and for su(1) omit the \f[C]\-\f[]
+(minus sign).
+.RE
+.PP
+If SSH_CLIENT is not set, the \f[I]IP\f[] after the panic argument
+allows you to give an IP address for which all established connections
+between the IP address and the host in panic will be allowed to
+continue.
+.SH COMMANDS
+.TP
+.B start; restart
+Activates the firewall using \f[C]/etc/firehol/firehol.conf\f[].
+.RS
+.PP
+Use of the term \f[C]restart\f[] is allowed for compatibility with
+common init implementations.
+.RE
+.TP
+.B try
+Activates the firewall, waiting for the user to type the word
+\f[C]commit\f[].
+If this word is not typed within 30 seconds, the previous firewall is
+restored.
+.RS
+.RE
+.TP
+.B stop
+Stops a running iptables(8) firewall by clearing all of the tables and
+chains and setting the default policies to ACCEPT.
+This will allow all traffic to pass unchecked.
+.RS
+.RE
+.TP
+.B condrestart
+Restarts the FireHOL firewall only if it is already active.
+This is the generally expected behaviour (but opposite to FireHOL prior
+to 2.0.0\-pre4).
+.RS
+.RE
+.TP
+.B status
+Shows the running firewall, using
+\f[C]/sbin/iptables\ \-nxvL\ |\ less\f[].
+.RS
+.RE
+.TP
+.B save
+Start the firewall and then save it using iptables\-save(8) to the
+location given by FIREHOL_AUTOSAVE.
+See firehol\-variables(5) for more information.
+.RS
+.PP
+The required kernel modules are saved to an executable shell script
+\f[C]/var/spool/firehol/last_save_modules.sh\f[], which can be called
+during boot if a firewall is to be restored.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+External changes may cause a firewall restored after a reboot to not
+work as intended where starting the firewall with FireHOL will work.
+.PP
+This is because as part of starting a firewall, FireHOL checks some
+changeable values.
+For instance the current kernel configuration is checked (for client
+port ranges), and RPC servers are queried (to allow correct functioning
+of the NFS service).
+.RE
+.RE
+.TP
+.B debug
+Parses the configuration file but instead of activating it, FireHOL
+shows the generated iptables(8) statements.
+.RS
+.RE
+.TP
+.B explain
+Enters an interactive mode where FireHOL accepts normal configuration
+commands and presents the generated iptables(8) commands for each of
+them, together with some reasoning for its purpose.
+.RS
+.PP
+Additionally, FireHOL automatically generates a configuration script
+based on the successful commands given.
+.PP
+Some extra commands are available in \f[C]explain\f[] mode.
+.TP
+.B help
+Present some help
+.RS
+.RE
+.TP
+.B show
+Present the generated configuration
+.RS
+.RE
+.TP
+.B quit
+Exit interactive mode and quit
+.RS
+.RE
+.RE
+.TP
+.B helpme; wizard
+Tries to guess the FireHOL configuration needed for the current machine.
+.RS
+.PP
+FireHOL will not stop or alter the running firewall.
+The configuration file is given in the standard output of firehol, thus
+\f[C]firehol\ helpme\ >\ /tmp/firehol.conf\f[] will produce the output
+in \f[C]/tmp/firehol.conf\f[].
+.PP
+The generated FireHOL configuration \f[I]must\f[] be edited before use
+on your systems.
+You are required to take a number of decisions; the comments in the
+generated file will instruct you in the choices you must make.
+.RE
+.SH FILES
+.PP
+\f[C]/etc/firehol/firehol.conf\f[]
+.SH SEE ALSO
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-variables(5) \- control variables
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team; Original man page by Marc Brockschmidt.

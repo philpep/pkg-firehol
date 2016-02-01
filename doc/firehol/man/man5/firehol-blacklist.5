@@ -1,0 +1,73 @@
+.TH "firehol\-blacklist" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-blacklist \- set up a unidirectional or bidirectional blacklist
+.SH SYNOPSIS
+.PP
+{ blacklist | blacklist4 | blacklist6 } [ \f[I]type\f[] ] [ inface
+\f[I]device\f[] ] [ log \f[I]"text"\f[] ] [ loglimit \f[I]"text"\f[] ] [
+accounting \f[I]accounting_name\f[] ] \f[I]ip\f[]...
+[ except \f[I]rule\-params\f[] ]
+.SH DESCRIPTION
+.PP
+The \f[C]blacklist\f[] helper command creates a blacklist for the
+\f[I]ip\f[] list given (which can be in quotes or not).
+.PP
+If the type \f[C]full\f[] or \f[C]all\f[] is supplied (or no type at
+all), a bidirectional stateless blacklist will be generated.
+The firewall will REJECT all traffic going to the IP addresses and DROP
+all traffic coming from them.
+.PP
+If the type \f[C]input\f[] or \f[C]him\f[], \f[C]her\f[], \f[C]it\f[],
+\f[C]this\f[], \f[C]these\f[] is supplied, a unidirectional stateful
+blacklist will be generated.
+Connections can be established to such IP addresses, but the IP
+addresses will not be able to connect to the firewall or hosts protected
+by it.
+.PP
+Using \f[C]log\f[] or \f[C]loglimit\f[], the \f[C]text\f[] will be
+logged when matching packets are found.
+.PP
+Using \f[C]inface\f[], the blacklist will be created on the interface
+\f[C]device\f[] only (this includes forwarded traffic).
+.PP
+\f[C]accounting\f[] will update the NFACCT accounting with the name
+given.
+.PP
+If the keyword \f[C]except\f[] is found, then all the parameters
+following it are rules to match packets that should excluded from the
+blacklist (i.e.
+they are a whitelist for this blacklist).
+See firehol\-params(5) for more details.
+.PP
+Blacklists must be declared before the first router or interface.
+.PP
+IP Lists for abuse, malware, attacks, proxies, anonymizers, etc can be
+downloaded with the contrib/update\-ipsets.sh script.
+Information about the supported IP Lists can be found at FireHOL IP
+Lists (http://iplists.firehol.org/)
+.SH EXAMPLES
+.IP
+.nf
+\f[C]
+blacklist\ full\ 192.0.2.1\ 192.0.2.2
+blacklist\ input\ "192.0.2.3\ 192.0.2.4"
+blacklist\ full\ inface\ eth0\ log\ "BADGUY"\ 192.0.1.1\ 192.0.1.2
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.IP \[bu] 2
+FireHOL IP Lists (http://iplists.firehol.org/)
+.SH AUTHORS
+FireHOL Team.

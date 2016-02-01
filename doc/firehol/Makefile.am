@@ -29,6 +29,8 @@ MANUALMAN_GENERATED = \
 	man/man5/firehol-group.5 \
 	man/man5/firehol-interface.5 \
 	man/man5/firehol-iptables.5 \
+	man/man5/firehol-ipset.5 \
+	man/man5/firehol-iptrap.5 \
 	man/man5/firehol-mac.5 \
 	man/man5/firehol-mark.5 \
 	man/man5/firehol-masquerade.5 \
@@ -41,6 +43,7 @@ MANUALMAN_GENERATED = \
 	man/man5/firehol-router.5 \
 	man/man5/firehol-server.5 \
 	man/man5/firehol-services.5 \
+	man/man5/firehol-synproxy.5 \
 	man/man5/firehol-tcpmss.5 \
 	man/man5/firehol-tos.5 \
 	man/man5/firehol-tosfix.5 \
@@ -70,6 +73,11 @@ MANUALMAN_GENERATED_INDIRECT = \
 	man/man5/firehol-interface4.5 \
 	man/man5/firehol-interface46.5 \
 	man/man5/firehol-interface6.5 \
+	man/man5/firehol-iptrap4.5 \
+	man/man5/firehol-iptrap6.5 \
+	man/man5/firehol-ipuntrap.5 \
+	man/man5/firehol-ipuntrap4.5 \
+	man/man5/firehol-ipuntrap6.5 \
 	man/man5/firehol-ip6tables.5 \
 	man/man5/firehol-ipv4.5 \
 	man/man5/firehol-ipv6.5 \
@@ -106,7 +114,10 @@ MANUALMAN_GENERATED_INDIRECT = \
 	man/man5/firehol-uid.5
 
 MANUALMARKDOWN_GENERATED = \
+	contents.md \
 	firehol-services.5.md
+
+if ENABLE_FIREHOL
 
 if ENABLE_DOC
 
@@ -118,9 +129,15 @@ pdf_DATA = \
 
 endif
 
+if ENABLE_MAN
+
 man_MANS = \
 	$(MANUALMAN_GENERATED) \
 	$(MANUALMAN_GENERATED_INDIRECT)
+
+endif
+
+endif
 
 if MAINTAINER_MODE
 
@@ -128,6 +145,7 @@ MKSERVICELINKS = ${top_srcdir}/doc/tools/mkservicelinks
 MKSERVICEMAN = ${top_srcdir}/doc/tools/mkserviceman
 MANSYNOS = ${top_srcdir}/doc/tools/man-synos
 COMBINEPANDOC = ${top_srcdir}/doc/tools/combine-pandoc
+FORMATTABLE = ${top_srcdir}/doc/tools/format-table
 PANDOCPOST = ${top_srcdir}/doc/tools/pandoc-post
 CHECKLINKS = ${top_srcdir}/doc/tools/check-links
 
@@ -135,6 +153,13 @@ FIREHOLIN = $(top_srcdir)/sbin/firehol.in
 
 firehol-services.5.md: $(FIREHOLIN) ../services-db.data ../service-links
 	$(MKSERVICEMAN) firehol-services.5.md $+
+
+contents.md: *.1.md *.5.md contents.tpl
+	$(FORMATTABLE) primary *.md > tmp-primary
+	$(FORMATTABLE) subcommand *.md > tmp-subcommand
+	$(FORMATTABLE) helper *.md > tmp-helper
+	$(SED) -f insert-tables.sed contents.tpl > contents.md
+	rm -f tmp-primary tmp-subcommand tmp-helper
 
 man/man1/%.1: %.1.md
 	$(MKDIR_P) man/man1
@@ -176,12 +201,17 @@ endif
 
 EXTRA_DIST = \
 	*.md \
+	*.tpl \
+	*.sed \
 	$(MANUALHTML_GENERATED) \
 	$(MANUALPDF_GENERATED) \
 	$(MANUALMAN_GENERATED) \
 	$(MANUALMAN_GENERATED_INDIRECT)
 
 CLEANFILES = \
+       tmp-primary \
+       tmp-subcommand \
+       tmp-helper \
        tmp-anchor-links \
        tmp-html-combined.md \
        tmp-manproc \

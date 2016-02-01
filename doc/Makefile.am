@@ -1,18 +1,19 @@
 # Process this file with automake to produce Makefile.in
 
-SUBDIRS = . firehol fireqos
-
-all-local: service-links
+SUBDIRS = . firehol fireqos vnetbuild
 
 dochtmldir = $(htmldir)/html
 
 MANUAL_LINKS = \
 	links-internal-firehol \
 	links-internal-fireqos \
+	links-internal-vnetbuild \
 	links-keywords-firehol \
 	links-keywords-fireqos \
+	links-keywords-vnetbuild \
 	links-website-firehol \
-	links-website-fireqos
+	links-website-fireqos  \
+	links-website-vnetbuild
 
 if ENABLE_DOC
 
@@ -28,12 +29,16 @@ MANUAL_TOOLS = \
 	tools/mkservicelinks \
 	tools/mkserviceman \
 	tools/pandoc-post \
-	tools/servicedb.pm
+	tools/servicedb.pm \
+	tools/format-table \
+	tools/run-linkchecker
 
 dochtml_DATA = \
 	$(MANUAL_CSS)
 
 if MAINTAINER_MODE
+
+all-local: service-links
 
 MKSERVICELINKS = ${top_srcdir}/doc/tools/mkservicelinks
 

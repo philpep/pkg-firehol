@@ -6,6 +6,10 @@
 
 firehol-mac - ensure source IP and source MAC address match
 
+<!--
+contents-table:helper:mac:keyword-firehol-mac-helper:Y:*all forbidden*:Restricts an IP to a particular MAC address.
+  -->
+
 # SYNOPSIS
 
 mac *IP* *macaddr*
@@ -49,4 +53,4 @@ mac 198.51.100.1 00:01:01:02:aa:e8
 * [firehol-params(5)][] - optional rule parameters
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

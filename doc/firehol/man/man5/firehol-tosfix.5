@@ -1,0 +1,54 @@
+.TH "firehol\-tosfix" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-tosfix \- apply suggested TOS values to packets
+.SH SYNOPSIS
+.PP
+tosfix
+.SH DESCRIPTION
+.PP
+The \f[C]tosfix\f[] helper command sets the Type of Service (TOS) field
+in packet headers based on the suggestions given by Erik Hensema in
+iptables and tc shaping
+tricks (http://www.docum.org/docum.org/faq/cache/49.html).
+.PP
+The following TOS values are set:
+.IP \[bu] 2
+All TCP ACK packets with length less than 128 bytes are assigned
+Minimize\-Delay, while bigger ones are assigned Maximize\-Throughput
+.IP \[bu] 2
+All packets with TOS Minimize\-Delay, that are bigger than 512 bytes are
+set to Maximize\-Throughput, except for short bursts of 2 packets per
+second
+.PP
+The \f[C]tosfix\f[] command must be used before the first router or
+interface.
+.SH EXAMPLE
+.IP
+.nf
+\f[C]
+tosfix
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-tos(5) \- tosfix config helper
+.IP \[bu] 2
+iptables(8) (http://ipset.netfilter.org/iptables.man.html) \-
+administration tool for IPv4 firewalls
+.IP \[bu] 2
+ip6tables(8) (http://ipset.netfilter.org/ip6tables.man.html) \-
+administration tool for IPv6 firewalls
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

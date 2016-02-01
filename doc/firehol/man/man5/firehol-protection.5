@@ -1,0 +1,229 @@
+.TH "firehol\-protection" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-protection \- add extra protections to a definition
+.SH SYNOPSIS
+.PP
+protection [reverse] strong [\f[I]requests/period\f[] [\f[I]burst\f[]]]
+.PP
+protection [reverse] \f[I]flood\-protection\-type\f[]
+[\f[I]requests/period\f[] [\f[I]burst\f[]]]
+.PP
+protection [reverse] { bad\-packets | \f[I]packet\-protection\-type\f[]
+}
+.PP
+protection [reverse] connlimit \f[I]connections\f[] [mask
+\f[I]prefix\f[]]
+.PP
+protection [reverse] connrate \f[I]rate\f[] [burst \f[I]amount\f[]]
+[srcmask \f[I]prefix\f[]] [htable\-size \f[I]buckets\f[]] [htable\-max
+\f[I]entries\f[]] [htable\-expire \f[I]msec\f[]] [htable\-gcinterval
+\f[I]msec\f[]]
+.SH DESCRIPTION
+.PP
+The \f[C]protection\f[] subcommand sets protection rules on an interface
+or router.
+.PP
+Flood protections honour the values \f[I]requests/period\f[] and
+\f[I]burst\f[].
+They are used to limit the rate of certain types of traffic.
+.PP
+The default rate FireHOL uses is 100 operations per second with a burst
+of 50.
+Run \f[C]iptables\ \-m\ limit\ \-\-help\f[] for more information.
+.PP
+The protection type \f[C]strong\f[] will switch on all protections (both
+packet and flood protections) except \f[C]all\-floods\f[].
+It has aliases \f[C]full\f[] and \f[C]all\f[].
+.PP
+The protection type \f[C]bad\-packets\f[] will switch on all packet
+protections but not flood protections.
+.PP
+You can specify multiple protection types by using multiple
+\f[C]protection\f[] commands or by using a single command and enclosing
+the types in quotes.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+On a router, protections are normally set up on inface.
+.PP
+The \f[C]reverse\f[] option will set up the protections on outface.
+You must use it as the first keyword.
+.RE
+.SH PACKET PROTECTION TYPES
+.TP
+.B bad\-packets:
+Drops all the bad packets detected by these rules.
+.RS
+.RE
+.TP
+.B invalid
+Drops all incoming invalid packets, as detected INVALID by the
+connection tracker.
+.RS
+.PP
+See also FIREHOL_DROP_INVALID in
+firehol\-variables(5) which allows setting this
+function globally.
+.RE
+.TP
+.B fragments
+Drops all packet fragments.
+.RS
+.PP
+This rule will probably never match anything since iptables(8)
+reconstructs all packets automatically before the firewall rules are
+processed whenever connection tracking is running.
+.RE
+.TP
+.B new\-tcp\-w/o\-syn
+Drops all TCP packets that initiate a socket but have not got the SYN
+flag set.
+.RS
+.RE
+.TP
+.B malformed\-xmas
+Drops all TCP packets that have all TCP flags set.
+.RS
+.RE
+.TP
+.B malformed\-null
+Drops all TCP packets that have all TCP flags unset.
+.RS
+.RE
+.TP
+.B malformed\-bad
+Drops all TCP packets that have illegal combinations of TCP flags set.
+.RS
+.RE
+.SS EXAMPLES
+.IP
+.nf
+\f[C]
+protection\ bad\-packets
+\f[]
+.fi
+.SH FLOOD PROTECTION TYPES
+.TP
+.B icmp\-floods [\f[I]requests/period\f[] [\f[I]burst\f[]]]
+Allows only a certain amount of ICMP echo requests.
+.RS
+.RE
+.TP
+.B syn\-floods [\f[I]requests/period\f[] [\f[I]burst\f[]]]
+Allows only a certain amount of new TCP connections.
+.RS
+.PP
+Be careful to not set the rate too low as the rule is applied to all
+connections regardless of their final result (rejected, dropped,
+established, etc).
+.RE
+.TP
+.B all\-floods [\f[I]requests/period\f[] [\f[I]burst\f[]]]
+Allows only a certain amount of new connections.
+.RS
+.PP
+Be careful to not set the rate too low as the rule is applied to all
+connections regardless of their final result (rejected, dropped,
+established, etc).
+.RE
+.SS EXAMPLES
+.IP
+.nf
+\f[C]
+protection\ all\-floods\ 90/sec\ 40
+\f[]
+.fi
+.SH CLIENT LIMITING TYPES
+.PP
+These protections were added in v3.
+.PP
+These protections are used to limit the connections client make, per
+\f[C]interface\f[] or \f[C]router\f[].
+.PP
+They support appending \f[C]optional\ rule\ parameters\f[] to limit
+their scope to certain clients only.
+.TP
+.B protection [reverse] connlimit \f[I]connections\f[] [mask
+\f[I]prefix\f[]]
+Allow only a number of connections per client (implemented with
+\f[C]connlimit\f[] with fixed type=\f[I]saddr\f[]).
+.RS
+.RE
+.TP
+.B protection [reverse] connrate \f[I]rate\f[] [burst \f[I]amount\f[]]
+[srcmask \f[I]prefix\f[]] [htable\-size \f[I]buckets\f[]] [htable\-max
+\f[I]entries\f[]] [htable\-expire \f[I]msec\f[]] [htable\-gcinterval
+\f[I]msec\f[]]
+Allow up to a rate of new connections per client (implemented with
+\f[C]hashlimit\f[] with fixed type=\f[I]upto\f[] and
+mode=\f[I]srcip\f[]).
+.RS
+.RE
+.SS EXAMPLES
+.PP
+Limit the number of concurrent connections to 10 per client
+.IP
+.nf
+\f[C]
+protection\ connlimit\ 10\ mask\ 32
+\f[]
+.fi
+.PP
+Limit the number of concurrent connections to 100 per client class\-C
+and also limit it to 5 for 1.2.3.4
+.IP
+.nf
+\f[C]
+protection\ connlimit\ 100\ mask\ 24
+protection\ connlimit\ 5\ src\ 1.2.3.4
+\f[]
+.fi
+.PP
+In the last example above, if you want to give client 1.2.3.4 more
+connections than all others, you should exclude it from the first
+connlimit statement, like this:
+.IP
+.nf
+\f[C]
+protection\ connlimit\ 100\ mask\ 24\ src\ not\ 1.2.3.4
+protection\ connlimit\ 200\ src\ 1.2.3.4
+\f[]
+.fi
+.PP
+Limit all clients to 10 concurrect connections and 60 connections/minute
+.IP
+.nf
+\f[C]
+protection\ connlimit\ 10
+protection\ connrate\ 60/minute
+\f[]
+.fi
+.SH KNOWN ISSUES
+.PP
+When using multiple types in a single command, if the quotes are
+forgotten, incorrect rules will be generated without warning.
+.PP
+When using multiple types in a single command, FireHOL will silently
+ignore any types that come after a group type (\f[C]bad\-packets\f[],
+\f[C]strong\f[] and its aliases).
+Only use group types on their own line.
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-interface(5) \- interface definition
+.IP \[bu] 2
+firehol\-router(5) \- router definition
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

@@ -6,6 +6,10 @@
 
 firehol-group - group commands with common options
 
+<!--
+contents-table:subcommand:group:keyword-firehol-group:Y:-:Define groups of commands that share optional rule parameters. Groups can be nested.
+  -->
+
 # SYNOPSIS
 
 group with *rule-params*
@@ -63,4 +67,4 @@ interface any world
 * [firehol-params(5)][] - optional rule parameters
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

@@ -1,0 +1,97 @@
+.TH "firehol\-connmark" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-connmark \- set a stateful mark on a connection
+.SH SYNOPSIS
+.PP
+\f[I]Warning \- this manual page is out of date for nightly build/v3
+behaviour\f[]
+.PP
+{ connmark | connmark46 } { value | save | restore } \f[I]chain\f[]
+\f[I]rule\-params\f[]
+.PP
+connmark4 { value | save | restore } \f[I]chain\f[]
+\f[I]rule\-params\f[]
+.PP
+connmark6 { value | save | restore } \f[I]chain\f[]
+\f[I]rule\-params\f[]
+.SH DESCRIPTION
+.PP
+The \f[C]connmark\f[] helper command sets a mark on a whole connection.
+It applies to both directions.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+To set a mark on packets matching particular rules, regardless of any
+connection, see firehol\-mark(5).
+.RE
+.PP
+The \f[I]value\f[] is the mark value to set (a 32 bit integer).
+If you specify \f[C]save\f[] then the mark on the matched packet will be
+turned into a connmark.
+If you specify \f[C]restore\f[] then the matched packet will have its
+mark set to the current connmark.
+.PP
+The \f[I]chain\f[] will be used to find traffic to mark.
+It can be any of the iptables(8) built in chains belonging to the
+\f[C]mangle\f[] table.
+The chain names are: INPUT, FORWARD, OUTPUT, PREROUTING and POSTROUTING.
+The names are case\-sensitive.
+.PP
+The \f[I]rule\-params\f[] define a set of rule parameters to match the
+traffic that is to be marked within the chosen chain.
+See firehol\-params(5) for more details.
+.PP
+Any \f[C]connmark\f[] commands will affect all traffic matched.
+They must be declared before the first router or interface.
+.SH EXAMPLES
+.PP
+Consider a scenario with 3 ethernet ports, where eth0 is on the local
+LAN, eth1 connects to ISP \[aq]A\[aq] and eth2 to ISP \[aq]B\[aq].
+To ensure traffic leaves via the same ISP as it arrives from you can
+mark the traffic.
+.IP
+.nf
+\f[C]
+\ #\ mark\ connections\ when\ they\ arrive\ from\ the\ ISPs
+\ connmark\ 1\ PREROUTING\ inface\ eth1
+\ connmark\ 2\ PREROUTING\ inface\ eth2
+
+\ #\ restore\ the\ mark\ (from\ the\ connmark)\ when\ packets\ arrive\ from\ the\ LAN
+\ connmark\ restore\ OUTPUT
+\ connmark\ restore\ PREROUTING\ inface\ eth0
+\f[]
+.fi
+.PP
+It is then possible to use the commands from iproute2 such as ip(8), to
+pick the correct routing table based on the mark on the packets.
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+firehol\-params(5) \- optional rule parameters
+.IP \[bu] 2
+firehol\-mark(5) \- mark traffic for traffic shaping
+tools
+.IP \[bu] 2
+iptables(8) (http://ipset.netfilter.org/iptables.man.html) \-
+administration tool for IPv4 firewalls
+.IP \[bu] 2
+ip6tables(8) (http://ipset.netfilter.org/ip6tables.man.html) \-
+administration tool for IPv6 firewalls
+.IP \[bu] 2
+ip(8) \- show / manipulate routing, devices, policy routing and tunnels
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.IP \[bu] 2
+Linux Advanced Routing & Traffic Control HOWTO (http://lartc.org/howto/)
+.SH AUTHORS
+FireHOL Team.

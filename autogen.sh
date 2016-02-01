@@ -1,21 +1,11 @@
-#! /bin/sh
-## `firehol/autogen.sh'
-##
+#!/bin/sh
 
-TOPDIR=$(pwd)
+# Update autoconf scripts after a configure.ac change
 
-export TOPDIR
+if [ ! -f .gitignore -o ! -f sbin/firehol.in ]
+then
+  echo "Run as ./packaging/autogen.sh from a firehol git repository"
+  exit 1
+fi
 
-[ -f Makefile ] && make -i maintainer-clean
-
-rm --verbose --recursive --force autom4te.cache
-find ${TOPDIR} -name 'Makefile.in' -exec rm --verbose \{\} \;
-
-aclocal --warnings=all -I m4
-automake --verbose --add-missing --gnu
-autoreconf --verbose --warnings=all
-
-rm -f configure.scan *~ *.log
-find ${TOPDIR} -name '*~' -exec rm -f '{}' \;
-
-exit 0
+autoreconf -ivf

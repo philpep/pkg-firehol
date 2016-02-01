@@ -9,6 +9,8 @@ firehol-proxy - set up a transparent TCP, HTTP or squid proxy
 <!--
 extra-manpage: firehol-transparent_proxy.5
 extra-manpage: firehol-transparent_squid.5
+
+contents-table:helper:transparent_proxy:keyword-firehol-transparent_proxy:Y:*see notes*:Set up a transparent TCP, HTTP or squid proxy.
   -->
 
 # SYNOPSIS
@@ -69,4 +71,4 @@ transparent_squid "80 3128 8080" "squid privoxy root bin" \
 * [firehol-nat(5)][] - nat, snat, dnat, redirect config helpers
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

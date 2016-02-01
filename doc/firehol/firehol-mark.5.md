@@ -8,7 +8,13 @@ firehol-mark - mark traffic for traffic shaping tools
 
 # SYNOPSIS
 
+*Warning - this manual page is out of date for nightly build/v3 behaviour*
+
 mark *value* *chain* *rule-params*
+
+<!--
+contents-table:helper:mark:keyword-firehol-mark-helper:Y:-:Set a stateful mark from the `usermark` group.
+  -->
 
 # DESCRIPTION
 
@@ -68,5 +74,5 @@ declared before the first router or interface.
 * ip(8) - show / manipulate routing, devices, policy routing and tunnels
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 * [Linux Advanced Routing & Traffic Control HOWTO](http://lartc.org/howto/)

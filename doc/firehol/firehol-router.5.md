@@ -6,6 +6,10 @@
 
 firehol-router - create a router definition
 
+<!--
+contents-table:primary:router:keyword-firehol-router:Y:-:Define packet filtering blocks, protecting other hosts from routed traffic.
+  -->
+
 # SYNOPSIS
 
 { router | router46 } *name* *rule-params*
@@ -137,7 +141,7 @@ none are left.
 * [firehol-masquerade(5)][keyword-firehol-masquerade] - masquerade helper
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 
 ## Router Subcommands
 

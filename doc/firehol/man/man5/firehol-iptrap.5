@@ -1,0 +1,135 @@
+.TH "firehol\-iptrap" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol\-iptrap \- dynamically put IP addresses in an ipset
+.SH SYNOPSIS
+.PP
+{ iptrap | iptrap4 | iptrap6 } \f[I]ipset\f[] \f[I]type\f[]
+\f[I]seconds\f[] [ timeout | counters ] [ method \f[B]method\f[] ]
+[\f[I]rule\-params\f[]] [ except [\f[I]rule\-params\f[]] ]...
+.PP
+{ ipuntrap | ipuntrap4 | ipuntrap6 } \f[I]ipset\f[] \f[I]type\f[] [
+timeout | counters ] [ method \f[B]method\f[] ] [\f[I]rule\-params\f[]]
+[ except [\f[I]rule\-params\f[]] ]...
+.SH DESCRIPTION
+.PP
+\f[C]iptrap\f[] adds the IP addresses of the matching packets to
+\f[C]ipset\f[].
+.PP
+\f[C]ipuntrap\f[] deletes the IP addresses of the matching packets from
+\f[C]ipset\f[].
+.PP
+Both helpers do not affect the flow of traffic.
+They do not \f[C]ACCEPT\f[], \f[C]REJECT\f[], \f[C]DROP\f[] packets or
+affect the firewall in any way.
+.PP
+\f[C]ipset\f[] is the name of the ipset to use.
+.PP
+\f[C]type\f[] selects which of the IP addresses of the matching packets
+will be used (added or removed from the ipset).
+\f[C]type\f[] can be \f[C]src\f[], \f[C]dst\f[], \f[C]src,dst\f[],
+\f[C]dst,src\f[], etc.
+If type is a pair, then the ipset must be an ipset of pairs too.
+.PP
+\f[C]seconds\f[] is required by \f[C]iptrap\f[] and gives the duration
+in seconds of the lifetime of each IP address that is added to
+\f[C]ipset\f[].
+Every matching packet will refresh this duration for the IP address in
+the ipset.
+The Linux kernel will automatically remove the IP from the ipset when
+this time expires.
+The user may monitor the remaining time for each IP, by running
+\f[C]ipset\ list\ NAME\f[] (where \f[C]NAME\f[] is the \f[C]ipset\f[]
+parameter given in the \f[C]iptrap\f[] command).
+.PP
+The seconds value \f[C]default\f[] will not set any seconds.
+The ipset default will be used.
+.PP
+A seconds of \f[C]0\f[] (zero), writes to the ipset permanently (this is
+a feature of the ipset command, not the ipset FireHOL helper).
+.PP
+The keywords \f[C]timeout\f[] and \f[C]counters\f[] are mutually
+exclusive.
+\f[C]timeout\f[] is the default and means that each IP address every
+time is matched its timeout will be refreshed, while \f[C]counters\f[]
+means that its packets and bytes counters will be refreshed.
+Unfortunately the kernel either re\-add the IP in the ipset with the new
+timeout \- but its counters will be lost, or just the counters will be
+updated, but the timeout will not be refreshed.
+.PP
+\f[C]method\f[] is defines the storage method of the underlying ipset.
+It accepts all the types the ipset commands accepts.
+.PP
+\f[C]method\f[] and \f[C]type\f[] should match.
+For example if method is \f[C]hash:ip\f[] then method should be either
+\f[C]src\f[] or \f[C]dst\f[].
+If method is \f[C]hash:ip,ip\f[] then method should be either
+\f[C]src,dst\f[] or \f[C]dst,src\f[].
+If method is \f[C]hash:ip,port,ip\f[] method should be
+\f[C]src,src,dst\f[] or \f[C]src,dst,dst\f[] or \f[C]dst,src,src\f[] or
+\f[C]dst,dst,src\f[].
+For more information check the manual page of the ipset command.
+.PP
+The \f[I]rule\-params\f[] define a set of rule parameters to restrict
+the traffic that is matched to this helper.
+See firehol\-params(5) for more details.
+.PP
+\f[C]except\f[] \f[I]rule\-params\f[] are used to exclude traffic, i.e.
+traffic that normally is matched by the first set of
+\f[I]rule\-params\f[], will be excluded if matched by the second.
+.PP
+\f[C]iptrap\f[] and \f[C]ipuntrap\f[] are hooked on PREROUTING so it is
+only useful for incoming traffic.
+.PP
+\f[C]iptrap\f[] and \f[C]ipuntrap\f[] cannot setup both IPv4 and IPv6
+traps with one call.
+The reason is that the \f[C]ipset\f[] can either be IPv4 or IPv6.
+.PP
+Both helpers will create the \f[C]ipset\f[] specified, if that ipset is
+not already created by other statements.
+When the ipset is created by the \f[C]iptrap\f[] helper, the ipset will
+not be reset (emptied) when the firewall is restarted.
+.PP
+The ipset options used when these helpers create ipsets can be
+controlled with the variable IPTRAP_DEFAULT_IPSET_OPTIONS.
+.SH EXAMPLES
+.IP
+.nf
+\f[C]
+\ #\ Example:\ mini\-IDS
+\ #\ add\ to\ the\ ipset\ `trap`\ for\ an\ hour\ (3600\ seconds)\ all\ IPs\ from\ all\ packets
+\ #\ coming\ from\ eth0\ and\ going\ to\ tcp/3306\ (mysql).
+\ iptrap4\ src\ trap\ 3600\ inface\ eth0\ proto\ tcp\ dport\ 3306\ log\ "TRAPPED\ HTTP"
+\ #\ block\ them
+\ blacklist4\ full\ inface\ eth0\ log\ "BLOCKED"\ src\ ipset:trap\ except\ src\ ipset:whitelist
+
+\ #\ Example:\ ipuntrap
+\ ipuntrap4\ src\ trap\ inface\ eth0\ src\ ipset:trap\ proto\ tcp\ dport\ 80\ log\ "UNTRAPPED\ HTTP"
+
+\ #\ Example:\ a\ knock
+\ #\ The\ user\ will\ be\ able\ to\ knock\ at\ tcp/12345
+\ iptrap4\ src\ knock1\ 30\ inface\ eth0\ proto\ tcp\ dport\ 12345\ log\ "KNOCK\ STEP\ 1"
+\ #\ in\ 30\ seconds\ knock\ at\ tcp/23456
+\ iptrap4\ src\ knock2\ 60\ inface\ eth0\ proto\ tcp\ dport\ 23456\ src\ ipset:knock1\ log\ "KNOCK\ STEP\ 2"
+\ #\ in\ 60\ seconds\ knock\ at\ tcp/34566
+\ iptrap4\ src\ knock3\ 90\ inface\ eth0\ proto\ tcp\ dport\ 34567\ src\ ipset:knock2\ log\ "KNOCK\ STEP\ 3"
+\ #
+\ #\ and\ in\ 90\ seconds\ ssh
+\ interface\ ...
+\ \ \ \ \ server\ ssh\ accept\ src\ ipset:knock3
+\f[]
+.fi
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol.conf(5) \- FireHOL configuration
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

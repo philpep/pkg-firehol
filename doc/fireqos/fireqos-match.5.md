@@ -57,6 +57,30 @@ match statement must specify to which class it classifies the packets it
 matches, using the `class` parameter. See
 [fireqos-params-match(5)][keyword-fireqos-class-param] and the examples below.
 
+You can also write `client` and `server` statements, much like FireHOL
+allows, with the same service definitions. For FireQOS however, the client
+ports are ignored. `server` statements match the server ports on this linux
+side, while `client` statements match the server ports on the remote side.
+
+Example:
+
+~~~~
+    server_myrtp_ports="10000:10100"
+
+    interface eth0 lan bidirectional rate 1Gbit
+      class voip
+        server sip
+        client sip
+        
+        server myrtp
+
+      class dns
+        server dns
+
+      class mail
+        server smtp
+~~~~
+
 # PARAMETERS
 
 *optional-match-params*
@@ -100,6 +124,6 @@ without the `class` parameters, all traffic would be classified into
 * [fireqos-interface(5)][keyword-fireqos-interface] - QOS interface definition
 * [fireqos-class(5)][keyword-fireqos-class-definition] - QOS class definition
 * [FireHOL Website](http://firehol.org/)
-* [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireQOS Online PDF Manual](http://firehol.org/fireqos-manual.pdf)
+* [FireQOS Online Documentation](http://firehol.org/documentation/)
 * [tc(8)](http://lartc.org/manpages/tc.html) - show / manipulate traffic control settings

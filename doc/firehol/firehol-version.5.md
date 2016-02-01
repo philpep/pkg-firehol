@@ -6,6 +6,10 @@
 
 firehol-version - set version number of configuration file
 
+<!--
+contents-table:helper:version:keyword-firehol-version:N:*all forbidden*:Specify a version number for the configuration file.
+  -->
+
 # SYNOPSIS
 
 version 6
@@ -35,4 +39,4 @@ configuration file format changes.
 * [firehol.conf(5)][] - FireHOL configuration
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

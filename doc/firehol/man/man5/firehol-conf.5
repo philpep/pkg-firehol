@@ -1,0 +1,333 @@
+.TH "firehol.conf" "5" "Built 10 Jan 2016" "FireHOL Reference" "3.0.1"
+.nh
+.SH NAME
+.PP
+firehol.conf \- FireHOL configuration
+.SH DESCRIPTION
+.PP
+\f[C]/etc/firehol/firehol.conf\f[] is the default configuration file for
+firehol(1).
+It defines the stateful firewall that will be produced.
+.PP
+A configuration file starts with an optional version indicator which
+looks like this:
+.IP
+.nf
+\f[C]
+version\ 6
+\f[]
+.fi
+.PP
+See firehol\-version(1) for full details.
+.PP
+A configuration file contains one or more \f[C]interface\f[]
+definitions, which look like this:
+.IP
+.nf
+\f[C]
+\ interface\ eth0\ lan
+\ \ \ client\ all\ accept\ #\ This\ host\ can\ access\ any\ remote\ service
+\ \ \ server\ ssh\ accept\ #\ Remote\ hosts\ can\ access\ SSH\ on\ local\ server
+\ \ \ #\ ...
+\f[]
+.fi
+.PP
+The above definition has name "lan" and specifies a network interface
+(eth0).
+A definition may contain zero or more subcommands.
+See firehol\-interface(5) for full details.
+.PP
+By default FireHOL will try to create both IPv4 and IPv6 rules for each
+interface.
+To make this explicit or restrict which rules are created write
+\f[C]both\ interface\f[], \f[C]ipv4\ interface\f[] or
+\f[C]ipv6\ interface\f[].
+.PP
+Note that IPv6 will be disabled silently if your system is not
+configured to use it.
+You can test this by looking for the file \f[C]/proc/net/if_inet6\f[].
+The IPv6
+HOWTO (http://www.tldp.org/HOWTO/Linux+IPv6-HOWTO/systemcheck-kernel.html)
+has more information.
+.PP
+A configuration file contains zero or more \f[C]router\f[] definitions,
+which look like this:
+.IP
+.nf
+\f[C]
+DMZ_IF=eth0
+WAN_IF=eth1
+router\ wan2dmz\ inface\ ${WAN_IF}\ outface\ ${DMZ_IF}
+\ \ route\ http\ accept\ \ #\ Hosts\ on\ WAN\ may\ access\ HTTP\ on\ hosts\ in\ DMZ
+\ \ server\ ssh\ accept\ \ #\ Hosts\ on\ WAN\ may\ access\ SSH\ on\ hosts\ in\ DMZ
+\ \ client\ pop3\ accept\ #\ Hosts\ in\ DMZ\ may\ access\ POP3\ on\ hosts\ on\ WAN
+\ \ #\ ...
+\f[]
+.fi
+.PP
+The above definition has name "wan2dmz" and specifies incoming and
+outgoing network interfaces (eth1 and eth0) using variables.
+A definition may contain zero or more subcommands.
+Note that a router is not required to specify network interfaces to
+operate on.
+See firehol\-router(5) for full details.
+.PP
+By default FireHOL will try to create both IPv4 and IPv6 rules for each
+router.
+To make this explicit or restrict which rules are created write
+\f[C]both\ router\f[], \f[C]ipv4\ router\f[] or \f[C]ipv6\ router\f[].
+.PP
+It is simple to add extra service definitions which can then be used in
+the same way as those provided as standard.
+See ADDING SERVICES.
+.PP
+The configuration file is parsed as a bash(1) script, allowing you to
+set up and use variables, flow control and external commands.
+.PP
+Special control variables may be set up and used outside of any
+definition, see firehol\-variables(5) as can the
+functions in CONFIGURATION HELPER
+COMMANDS and HELPER
+COMMANDS.
+.SH VARIABLES AVAILABLE
+.PP
+The following variables are made available in the FireHOL configuration
+file and can be accessed as ${\f[I]VARIABLE\f[]}.
+.TP
+.B UNROUTABLE_IPS
+This variable includes the IPs from both PRIVATE_IPS and RESERVED_IPS.
+It is useful to restrict traffic on interfaces and routers accepting
+Internet traffic, for example:
+.RS
+.IP
+.nf
+\f[C]
+interface\ eth0\ internet\ src\ not\ "${UNROUTABLE_IPS}"
+\f[]
+.fi
+.RE
+.TP
+.B PRIVATE_IPS
+This variable includes all the IP addresses defined as Private or Test
+by RFC 3330 (https://tools.ietf.org/html/rfc3330).
+.RS
+.PP
+You can override the default values by creating a file called
+\f[C]/etc/firehol/PRIVATE_IPS\f[].
+.RE
+.TP
+.B RESERVED_IPS
+This variable includes all the IP addresses defined by
+IANA (http://www.iana.org/) as reserved.
+.RS
+.PP
+You can override the default values by creating a file called
+\f[C]/etc/firehol/RESERVED_IPS\f[].
+.PP
+Now that IPv4 address space has all been allocated there is very little
+reason that this value will need to change in future.
+.RE
+.TP
+.B MULTICAST_IPS
+This variable includes all the IP addresses defined as Multicast by RFC
+3330 (https://tools.ietf.org/html/rfc3330).
+.RS
+.PP
+You can override the default values by creating a file called
+\f[C]/etc/firehol/MULTICAST_IPS\f[].
+.RE
+.SH ADDING SERVICES
+.PP
+To define new services you add the appropriate lines before using them
+later in the configuration file.
+.PP
+The following are required:
+.RS
+.PP
+server_\f[I]myservice\f[]_ports="\f[I]proto\f[]/\f[I]sports\f[]"
+.RE
+.RS
+.PP
+client_\f[I]myservice\f[]_ports="\f[I]cports\f[]"
+.RE
+.PP
+\f[I]proto\f[] is anything iptables(8) accepts e.g.
+"tcp", "udp", "icmp", including numeric protocol values.
+.PP
+\f[I]sports\f[] is the ports the server is listening at.
+It is a space\-separated list of port numbers, names and ranges
+(from:to).
+The keyword \f[C]any\f[] will match any server port.
+.PP
+\f[I]cports\f[] is the ports the client may use to initiate a
+connection.
+It is a space\-separated list of port numbers, names and ranges
+(from:to).
+The keyword \f[C]any\f[] will match any client port.
+The keyword \f[C]default\f[] will match default client ports.
+For the local machine (e.g.
+a \f[C]client\f[] within an \f[C]interface\f[]) it resolves to sysctl(8)
+variable net.ipv4.ip_local_port_range (or
+\f[C]/proc/sys/net/ipv4/ip_local_port_range\f[]).
+For a remote machine (e.g.
+a client within an interface or anything in a router) it resolves to the
+variable DEFAULT_CLIENT_PORTS (see
+firehol\-variables(5)).
+.PP
+The following are optional:
+.RS
+.PP
+require_\f[I]myservice\f[]_modules="\f[I]modules\f[]"
+.RE
+.RS
+.PP
+require_\f[I]myservice\f[]_nat_modules="\f[I]nat\-modules\f[]"
+.RE
+.PP
+The named kernel modules will be loaded when the definition is used.
+The NAT modules will only be loaded if FIREHOL_NAT is non\-zero (see
+firehol\-variables(5)).
+.PP
+For example, for a service named \f[C]daftnet\f[] that listens at two
+ports, port 1234 TCP and 1234 UDP where the expected client ports are
+the default random ports a system may choose, plus the same port numbers
+the server listens at, with further dynamic ports requiring kernel
+modules to be loaded:
+.IP
+.nf
+\f[C]
+\ \ \ \ #\ Setup\ service
+\ \ \ \ server_daftnet_ports="tcp/1234\ udp/1234"
+\ \ \ \ client_daftnet_ports="default\ 1234"
+\ \ \ \ require_daftnet_modules="ip_conntrack_daftnet"
+\ \ \ \ require_daftnet_nat_modules="ip_nat_daftnet
+\ \ \ \ 
+\ \ \ \ interface\ eth0\ lan0
+\ \ \ \ \ \ server\ daftnet\ accept
+\ \ \ \ \ 
+\ \ \ \ interface\ eth1\ lan1
+\ \ \ \ \ \ client\ daftnet\ reject
+\ \ \ \ 
+\ \ \ \ router\ lan2lan\ inface\ eth0\ outface\ eth1
+\ \ \ \ \ \ route\ daftnet\ accept
+\f[]
+.fi
+.PP
+Where multiple ports are provides (as per the example), FireHOL simply
+determines all of the combinations of client and server ports and
+generates multiple iptables(8) statements to match them.
+.PP
+To create more complex rules, or stateless rules, you will need to
+create a bash function prefixed \f[C]rules_\f[] e.g.
+\f[C]rules_myservice\f[].
+The best reference is the many such functions in the main firehol(1)
+script.
+.PP
+When adding a service which uses modules, or via a custom function, you
+may also wish to include the following:
+.RS
+.PP
+ALL_SHOULD_ALSO_RUN="${ALL_SHOULD_ALSO_RUN} \f[I]myservice\f[]"
+.RE
+.PP
+which will ensure your service is set\-up correctly as part of the
+\f[C]all\f[] service.
+.RS
+.PP
+\f[B]Note\f[]
+.PP
+To allow definitions to be shared you can instead create files and
+install them in the \f[C]/etc/firehol/services\f[] directory with a
+\f[C]\&.conf\f[] extension.
+.PP
+The first line must read:
+.IP
+.nf
+\f[C]
+#FHVER:\ 1:213
+\f[]
+.fi
+.PP
+1 is the service definition API version.
+It will be changed if the API is ever modified.
+The 213 originally referred to a FireHOL 1.x minor version but is no
+longer checked.
+.PP
+FireHOL will refuse to run if the API version does not match the
+expected one.
+.RE
+.SH DEFINITIONS
+.IP \[bu] 2
+firehol\-interface(5) \- interface definition
+.IP \[bu] 2
+firehol\-router(5) \- router definition
+.SH SUBCOMMANDS
+.IP \[bu] 2
+firehol\-policy(5) \- policy command
+.IP \[bu] 2
+firehol\-protection(5) \- protection command
+.IP \[bu] 2
+firehol\-server(5) \- server, route commands
+.IP \[bu] 2
+firehol\-client(5) \- client command
+.IP \[bu] 2
+firehol\-group(5) \- group command
+.SH HELPER COMMANDS
+.PP
+These helpers can be used in \f[C]interface\f[] and \f[C]router\f[]
+definitions as well as before them:
+.IP \[bu] 2
+firehol\-iptables(5) \- iptables helper
+.IP \[bu] 2
+firehol\-masquerade(5) \- masquerade helper
+.PP
+This helper can be used in \f[C]router\f[] definitions as well as before
+any \f[C]router\f[] or \f[C]interface\f[]:
+.IP \[bu] 2
+firehol\-tcpmss(5) \- tcpmss helper
+.SH CONFIGURATION HELPER COMMANDS
+.PP
+These helpers should only be used outside of \f[C]interface\f[] and
+\f[C]router\f[] definitions (i.e.
+before the first interface is defined).
+.IP \[bu] 2
+firehol\-version(5) \- version config helper
+.IP \[bu] 2
+firehol\-action(5) \- action config helper
+.IP \[bu] 2
+firehol\-blacklist(5) \- blacklist config helper
+.IP \[bu] 2
+firehol\-classify(5) \- classify config helper
+.IP \[bu] 2
+firehol\-connmark(5) \- connmark config helper
+.IP \[bu] 2
+firehol\-dscp(5) \- dscp config helper
+.IP \[bu] 2
+firehol\-mac(5) \- mac config helper
+.IP \[bu] 2
+firehol\-mark(5) \- mark config helper
+.IP \[bu] 2
+firehol\-nat(5) \- nat, snat, dnat, redirect helpers
+.IP \[bu] 2
+firehol\-proxy(5) \- transparent proxy/squid helpers
+.IP \[bu] 2
+firehol\-tos(5) \- tos config helper
+.IP \[bu] 2
+firehol\-tosfix(5) \- tosfix config helper
+.SH SEE ALSO
+.IP \[bu] 2
+firehol(1) \- FireHOL program
+.IP \[bu] 2
+firehol\-variables(5) \- control variables
+.IP \[bu] 2
+firehol\-services(5) \- services list
+.IP \[bu] 2
+firehol\-actions(5) \- actions for rules
+.IP \[bu] 2
+FireHOL Website (http://firehol.org/)
+.IP \[bu] 2
+FireHOL Online PDF Manual (http://firehol.org/firehol-manual.pdf)
+.IP \[bu] 2
+FireHOL Online Documentation (http://firehol.org/documentation/)
+.SH AUTHORS
+FireHOL Team.

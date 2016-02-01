@@ -6,6 +6,10 @@
 
 firehol-tosfix - apply suggested TOS values to packets
 
+<!--
+contents-table:helper:tosfix:keyword-firehol-tosfix:Y:*all forbidden*:Apply suggested TOS values to packets.
+  -->
+
 # SYNOPSIS
 
 tosfix
@@ -43,4 +47,4 @@ tosfix
 * [ip6tables(8)](http://ipset.netfilter.org/ip6tables.man.html) - administration tool for IPv6 firewalls
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)

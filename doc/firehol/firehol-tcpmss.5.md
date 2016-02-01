@@ -6,6 +6,11 @@
 
 firehol-tcpmss - set the MSS of TCP SYN packets for routers
 
+<!--
+contents-table:subcommand:tcpmss:keyword-firehol-tcpmss:Y:*all forbidden*:Set the MSS (Maximum Segment Size) of TCP SYN packets routed through the firewall.
+contents-table:helper:tcpmss:keyword-firehol-tcpmss:Y:*all forbidden*:Set the MSS (Maximum Segment Size) of TCP SYN packets routed through the firewall.
+  -->
+
 # SYNOPSIS
 
 tcpmss { *mss* | auto } [*if-list*]
@@ -47,5 +52,5 @@ tcpmss 500 "eth1 eth2 eth3"
 * [firehol-router(5)][keyword-firehol-router] - router definition
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
 * [TCPMSS target in the iptables tutorial](https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html#TCPMSSTARGET)

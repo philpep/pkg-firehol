@@ -6,6 +6,10 @@
 
 firehol-policy - set default action for an interface or router
 
+<!--
+contents-table:subcommand:policy:keyword-firehol-policy:N:*all forbidden*:Define the action to be applied on packets not matched by any `server` or `client` statements in the `interface` or `router`.
+  -->
+
 # SYNOPSIS
 
 policy *action*
@@ -51,4 +55,4 @@ interface eth0 intranet src 192.0.2.0/24
 * [firehol-router(5)][keyword-firehol-router] - router definition
 * [FireHOL Website](http://firehol.org/)
 * [FireHOL Online PDF Manual](http://firehol.org/firehol-manual.pdf)
-* [FireHOL Online HTML Manual](http://firehol.org/manual)
+* [FireHOL Online Documentation](http://firehol.org/documentation/)
