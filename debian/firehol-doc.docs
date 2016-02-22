@@ -1,6 +1,6 @@
-AUTHORS
+#AUTHORS
 THANKS
-NEWS
+#NEWS
 README
 debian/tmp/usr/share/doc/firehol/firehol-manual.pdf
 debian/tmp/usr/share/doc/firehol/html/firehol-manual.html

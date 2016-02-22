@@ -2,19 +2,19 @@ Description: debianization -- FireQOS
  Make /etc/fireqos the configuration folder for FireQOS;
  see debian/fireqos.README.Debian for details.
 Author: Jerome Benoit <calculus@rezozer.net>
-Last-Update: 2014-08-15
+Last-Update: 2015-12-26
 
 --- a/sbin/fireqos.in
 +++ b/sbin/fireqos.in
-@@ -60,7 +60,7 @@
- shopt -s extglob
+@@ -49,7 +49,7 @@
+ 	fi
+ done
  
- FIREQOS_SYSLOG_FACILITY="daemon"
--FIREQOS_CONFIG=/etc/firehol/fireqos.conf
-+FIREQOS_CONFIG=/etc/fireqos/fireqos.conf
- FIREQOS_LOCK_FILE=/var/run/fireqos.lock
- FIREQOS_LOCK_FILE_TIMEOUT=600
- FIREQOS_DIR=/var/run/fireqos
+-FIREHOL_CONFIG_DIR="$sysconfdir_POST/firehol"
++FIREHOL_CONFIG_DIR="$sysconfdir_POST/fireqos"
+ common_disable_localization || exit
+ common_public_umask || exit
+ common_require_root || exit
 --- a/doc/fireqos/fireqos.1.md
 +++ b/doc/fireqos/fireqos.1.md
 @@ -25,7 +25,7 @@

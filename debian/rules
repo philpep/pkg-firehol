@@ -12,5 +12,8 @@ override_dh_auto_configure:
 override_dh_installinit:
 	dh_installinit --restart-after-upgrade
 
+override_dh_compress:
+	dh_compress -X.pdf -Xexamples
+
 get-orig-source:
-	uscan --no-conf --download-current-version --verbose
+	uscan --no-conf --download-current-version --compression xz --verbose

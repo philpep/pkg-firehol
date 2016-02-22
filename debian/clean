@@ -1,0 +1,6 @@
+doc/service-links
+sbin/firehol
+sbin/fireqos
+sbin/link-balancer
+sbin/update-ipsets
+sbin/vnetbuild

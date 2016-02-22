@@ -1,2 +1,4 @@
 debian/fireqos.conf etc/fireqos
 sbin/fireqos usr/sbin
+usr/share/doc/firehol/contrib/fireqos.service usr/share/doc/fireqos/examples/contrib/systemd
+debian/adhoc/contrib/systemd/README.fireqos   usr/share/doc/fireqos/examples/contrib/systemd

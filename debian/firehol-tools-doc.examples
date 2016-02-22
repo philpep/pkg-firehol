@@ -1,0 +1,4 @@
+debian/tmp/usr/share/doc/firehol/examples/vnetbuild-simple.conf
+debian/tmp/usr/share/doc/firehol/examples/vnetbuild.conf
+debian/tmp/usr/share/doc/firehol/examples/newns.sh
+##debian/tmp/usr/share/update-ipsets

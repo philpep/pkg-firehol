@@ -4,25 +4,53 @@ Upstream-Contact:
  Costa Tsaousis <costa@firehol.org>, <costa@tsaousis.gr>
  Phil Whineray <phil@firehol.org>
 Source: http://firehol.org
-X-Source:
- http://freecode.com/projects/firehol
- http://www.ohloh.net/p/firehol
-X-Source-Downloaded-From: http://firehol.org/download/releases
+X-Source: http://www.ohloh.net/p/firehol
+X-Source-Downloaded-From: http://firehol.org/download/firehol/releases
 X-Upstream-Vcs: git clone https://github.com/ktsaou/firehol.git
 X-Upstream-Bugs: http://github.com/ktsaou/firehol/issues
+Files-Excluded:
+ doc/tools/pandoc-post
+ doc/vnetbuild/man
+ doc/fireqos/man
+ doc/firehol/man
+ doc/vnetbuild/vnetbuild-manual.html
+ doc/fireqos/fireqos-manual.html
+ doc/firehol/firehol-manual.html
+ doc/vnetbuild/vnetbuild-manual.pdf
+ doc/fireqos/fireqos-manual.pdf
+ doc/firehol/firehol-manual.pdf
+ doc/firehol/firehol-services.5.md
+ doc/firehol/contents.md
+ doc/service-links
+ autotool/install-sh
+ autotool/missing
+ html/ipsets/Makefile.in
+ html/Makefile.in
+ contrib/Makefile.in
+ doc/vnetbuild/Makefile.in
+ doc/fireqos/Makefile.in
+ doc/firehol/Makefile.in
+ doc/Makefile.in
+ examples/Makefile.in
+ etc/Makefile.in
+ sbin/Makefile.in
+ m4/Makefile.in
+ Makefile.in
+ aclocal.m4
+ configure
 Comment:
  The upstream source tarball is repacked to drop off some substantial
  weight by mainly cleaning up regenerated files.
 
 Files: *
 Copyright:
-	2012-2015 Phil Whineray <phil@firehol.org>
-  2003-2015 Costa Tsaousis <costa@tsaousis.gr>
+	2012-2016 Phil Whineray <phil@firehol.org>
+  2003-2016 Costa Tsaousis <costa@tsaousis.gr>
 License: GPL-2+
 
 Files: debian/*
 Copyright:
- 2013-2015 Jerome Benoit <calculus@rezozer.net>
+ 2013-2016 Jerome Benoit <calculus@rezozer.net>
  2004-2009 Alexander Wirt <formorer@debian.org>
  2003-2004 Marc Brockschmidt <he@debian.org>
 License: GPL-2+

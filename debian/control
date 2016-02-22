@@ -7,17 +7,21 @@ Build-Depends-Indep:
  libxml2-utils,
  texlive-base, texlive-latex-recommended, texlive-fonts-recommended, lmodern,
  pandoc,
- kmod, iptables, iproute2, procps
-Standards-Version: 3.9.6
-Homepage: http://firehol.org
-Vcs-Git: git://anonscm.debian.org/collab-maint/firehol.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/firehol.git
+ kmod, iptables, iproute2, ipset, iprange, nfacct, tcpdump,
+ inetutils-ping | iputils-ping , traceroute,
+ procps,
+ curl, wget, whois, jq, unzip, git, graphviz,
+ screen, ksh
+Standards-Version: 3.9.7
+Homepage: https://firehol.org
+Vcs-Git: https://anonscm.debian.org/collab-maint/firehol.git
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/firehol.git
 
 Package: firehol
 Architecture: all
-Depends: ${misc:Depends}, lsb-base, kmod, iptables, iproute2, tcpdump, procps
+Depends: firehol-common (= ${binary:Version}), ${misc:Depends}
 Recommends: fireqos (= ${binary:Version})
-Suggests: firehol-doc (= ${binary:Version}), ulogd2
+Suggests: firehol-tools (= ${binary:Version}), firehol-doc (= ${binary:Version}), ulogd2
 Description: easy to use but powerful iptables stateful firewall (program)
  FireHOL generates generic firewalls with an extremely simple but powerful
  configuration language based on bash, enabling you to design any kind of
@@ -47,9 +51,9 @@ Description: easy to use but powerful iptables stateful firewall (docs)
 
 Package: fireqos
 Architecture: all
-Depends: ${misc:Depends}, lsb-base, kmod, iproute2, tcpdump, procps
+Depends: firehol-common (= ${binary:Version}), ${misc:Depends}
 Recommends: firehol (= ${binary:Version})
-Suggests: fireqos-doc (= ${binary:Version})
+Suggests: firehol-tools (= ${binary:Version}), fireqos-doc (= ${binary:Version})
 Description: easy to use but powerful traffic shaping tool (program)
  FireQOS generates generic traffic shapers with an extremely simple but
  powerful configuration language based on bash, enabling you to design
@@ -74,3 +78,46 @@ Description: easy to use but powerful traffic shaping tool (docs)
  both FireHOL and FireQOS support IPv4 and IPv6.
  .
  This package contains documentation and examples.
+
+Package: firehol-tools
+Architecture: all
+Depends:
+ firehol-common (= ${binary:Version}),
+ curl, wget, whois, jq, unzip, git, graphviz, screen, ksh,
+ ${misc:Depends}
+Recommends: firehol (= ${binary:Version}), fireqos (= ${binary:Version})
+Description: easy to use but powerful traffic suite (extra tools)
+ FireHOL suite is a powerful traffic suite of tools that generate generic
+ firewalls, traffic shappers, and  more with an extremely simple but powerful
+ configuration language based on bash, enabling you to design and manage
+ any kind of traffic with ease.
+ .
+ This package provides extra tools.
+
+Package: firehol-tools-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Suggests: firehol-tools (= ${binary:Version}), pdf-viewer, www-browser
+Description: easy to use but powerful traffic suite (extra tools docs)
+ FireHOL suite is a powerful traffic suite of tools that generate generic
+ firewalls, traffic shappers, and  more with an extremely simple but powerful
+ configuration language based on bash, enabling you to design and manage
+ any kind of traffic with ease.
+ .
+ This package provides documentation and examples for the extra tools.
+
+Package: firehol-common
+Architecture: all
+Depends:
+ lsb-base, kmod, iptables, iproute2, ipset, iprange, nfacct, tcpdump,
+ inetutils-ping | iputils-ping , traceroute, procps,
+ ${misc:Depends}
+Recommends: less, firehol (= ${binary:Version}), fireqos (= ${binary:Version})
+Description: easy to use but powerful traffic suite (common library)
+ FireHOL suite is a powerful traffic suite of tools that generate generic
+ firewalls, traffic shappers, and  more with an extremely simple but powerful
+ configuration language based on bash, enabling you to design and manage
+ any kind of traffic with ease.
+ .
+ This package provides the common library.

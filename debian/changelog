@@ -1,3 +1,27 @@
+firehol (3.0.1+ds-1) unstable; urgency=medium
+
+  * New upstream major version (Closes: #813114).
+  * Debianization:
+    - debian/control:
+      - new binary packages: firehol-tools{,-doc} and firehol-common;
+      - Homepage, Vcs-* fields: refresh and secure;
+      - Standards Version, bump to 3.9.7 (no change);
+      - refresh;
+    - debian/copyright:
+      - repack by using the Files-Excluded machinery instead of the ad-hoc
+        script debian/repack;
+      - refresh;
+    - debian/repack, discard (see above);
+    - debian/watch:
+      - revisit (see above);
+      - harden;
+    - debian/rules, harden;
+    - debian/fire{hol,qos}-doc.doc-base, revisit;
+    - material for firehol-tools, firehol-tools-doc and firehol-common.
+  * Minor, cosmetic fixes submitted to the upstream maintainers.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Mon, 22 Feb 2016 04:07:11 +0000
+
 firehol (2.0.3+ds-1) unstable; urgency=medium
 
   * New upstream version.
@@ -23,7 +47,7 @@ firehol (2.0.1+ds-1) unstable; urgency=medium
   * New upstream version.
   * Debianization:
     - debian/watch: watch only for stable releases;
-    -debian/copyright: refresh.
+    - debian/copyright: refresh.
 
  -- Jerome Benoit <calculus@rezozer.net>  Tue, 17 Feb 2015 13:32:19 +0000
 

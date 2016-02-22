@@ -1,6 +1,6 @@
-AUTHORS
+#AUTHORS
 THANKS
-NEWS
+#NEWS
 README
 debian/tmp/usr/share/doc/firehol/fireqos-manual.pdf
 debian/tmp/usr/share/doc/firehol/html/fireqos-manual.html

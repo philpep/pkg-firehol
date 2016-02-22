@@ -1,2 +1,4 @@
-upstream-lock_folder.patch
+upstream-autotools-zcat.patch
+upstream-autotools-rationalize-README_me.patch
+upstream-autotools-rationalize-libarchinddir.patch
 debianization-fireqos.patch
