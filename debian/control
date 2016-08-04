@@ -12,9 +12,9 @@ Build-Depends-Indep:
  procps,
  curl, wget, whois, jq, unzip, git, graphviz,
  screen, ksh
-Standards-Version: 3.9.7
+Standards-Version: 3.9.8
 Homepage: https://firehol.org
-Vcs-Git: https://anonscm.debian.org/collab-maint/firehol.git
+Vcs-Git: https://anonscm.debian.org/git/collab-maint/firehol.git
 Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/firehol.git
 
 Package: firehol

@@ -1,3 +1,16 @@
+firehol (3.0.1+ds-2) unstable; urgency=medium
+
+  * Debianization:
+    - debian/control:
+      - Vcs-Git field, correct;
+      - Standards Version, bump to 3.9.8 (no change);
+    - manpages belonging to section 5 (files formats and conventions)
+      are now gathered in their associated -doc package, thanks to
+      Alexander Perlis <aperlis@math.lsu.edu> for reporting the issue
+      (Closes: #819742).
+
+ -- Jerome Benoit <calculus@rezozer.net>  Thu, 04 Aug 2016 00:01:17 +0000
+
 firehol (3.0.1+ds-1) unstable; urgency=medium
 
   * New upstream major version (Closes: #813114).
