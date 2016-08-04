@@ -1,3 +1,12 @@
+firehol (3.0.1+ds-3) unstable; urgency=medium
+
+  * Debianization:
+    - debian/control:
+      - Replaces/Breaks fields, adjust;
+      - Enhances fields, introduce.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Thu, 04 Aug 2016 12:51:12 +0000
+
 firehol (3.0.1+ds-2) unstable; urgency=medium
 
   * Debianization:

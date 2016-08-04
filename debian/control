@@ -35,10 +35,11 @@ Description: easy to use but powerful iptables stateful firewall (program)
 Package: firehol-doc
 Section: doc
 Architecture: all
-Replaces: firehol (<< 2.0.0)
-Breaks: firehol(<< 2.0.0)
+Replaces: firehol (<< 3.0.1+ds-2)
+Breaks: firehol (<< 3.0.1+ds-2)
 Depends: ${misc:Depends}
-Suggests: firehol (= ${binary:Version}), pdf-viewer, www-browser
+Suggests: pdf-viewer, www-browser
+Enhances: firehol (= ${binary:Version})
 Description: easy to use but powerful iptables stateful firewall (docs)
  FireHOL generates generic firewalls with an extremely simple but powerful
  configuration language based on bash, enabling you to design any kind of
@@ -67,8 +68,11 @@ Description: easy to use but powerful traffic shaping tool (program)
 Package: fireqos-doc
 Section: doc
 Architecture: all
+Replaces: fireqos (<< 3.0.1+ds-2)
+Breaks: fireqos (<< 3.0.1+ds-2)
 Depends: ${misc:Depends}
-Suggests: fireqos (= ${binary:Version}), pdf-viewer, www-browser
+Suggests: pdf-viewer, www-browser
+Enhances: fireqos (= ${binary:Version})
 Description: easy to use but powerful traffic shaping tool (docs)
  FireQOS generates generic traffic shapers with an extremely simple but
  powerful configuration language based on bash, enabling you to design
@@ -85,7 +89,8 @@ Depends:
  firehol-common (= ${binary:Version}),
  curl, wget, whois, jq, unzip, git, graphviz, screen, ksh,
  ${misc:Depends}
-Recommends: firehol (= ${binary:Version}), fireqos (= ${binary:Version})
+Recommends: firehol (= ${binary:Version})
+Enhances: fireqos (= ${binary:Version})
 Description: easy to use but powerful traffic suite (extra tools)
  FireHOL suite is a powerful traffic suite of tools that generate generic
  firewalls, traffic shappers, and  more with an extremely simple but powerful
@@ -97,8 +102,11 @@ Description: easy to use but powerful traffic suite (extra tools)
 Package: firehol-tools-doc
 Section: doc
 Architecture: all
+Replaces: firehol-tools (<< 3.0.1+ds-2)
+Breaks: firehol-tools (<< 3.0.1+ds-2)
 Depends: ${misc:Depends}
-Suggests: firehol-tools (= ${binary:Version}), pdf-viewer, www-browser
+Suggests: pdf-viewer, www-browser
+Enhances: firehol-tools (= ${binary:Version})
 Description: easy to use but powerful traffic suite (extra tools docs)
  FireHOL suite is a powerful traffic suite of tools that generate generic
  firewalls, traffic shappers, and  more with an extremely simple but powerful
