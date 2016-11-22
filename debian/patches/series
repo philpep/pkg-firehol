@@ -1,4 +1,2 @@
-upstream-autotools-zcat.patch
-upstream-autotools-rationalize-README_me.patch
-upstream-autotools-rationalize-libarchinddir.patch
+upstream-lintian-spelling-error-silence.patch
 debianization-fireqos.patch

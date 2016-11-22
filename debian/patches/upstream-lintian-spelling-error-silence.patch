@@ -1,0 +1,38 @@
+Description: source typo
+ Correct spelling errors as reported by lintian in the manpages; meant
+ to silence lintian and eventually to be submitted to the upstream maintainer.
+Origin: vendor, Debian
+Forwarded: https://github.com/firehol/firehol/pull/166
+Comment: spelling-error-in-manpage
+Author: Jerome Benoit <calculus@rezozer.net>
+Last-Update: 2016-11-22
+
+--- a/doc/firehol/firehol-defaults-conf.5.md
++++ b/doc/firehol/firehol-defaults-conf.5.md
+@@ -373,7 +373,7 @@
+     without logging them.
+ 
+     In busy environments the iptables(8) connection tracker removes
+-    uneeded connection tracking list entries. This makes ACK packets
++    unneeded connection tracking list entries. This makes ACK packets
+     appear as an invalid packet which will normally be logged by FireHOL.
+ 
+     Example:
+@@ -388,7 +388,7 @@
+     without logging them.
+ 
+     In busy environments the iptables(8) connection tracker removes
+-    uneeded connection tracking list entries. This makes RST packets
++    unneeded connection tracking list entries. This makes RST packets
+     appear as an invalid packet which will normally be logged by FireHOL.
+ 
+     Example:
+@@ -403,7 +403,7 @@
+     unreachable packets without logging them.
+ 
+     In busy environments the iptables(8) connection tracker removes
+-    uneeded connection tracking list entries. This makes ICMP destination
++    unneeded connection tracking list entries. This makes ICMP destination
+     unreachable appear as an invalid packet which will normally be logged
+     by FireHOL.
+ 

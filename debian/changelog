@@ -1,3 +1,16 @@
+firehol (3.0.2+ds-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Debianization:
+    - debian/control:
+      - Depends field, add lsb-base for firehol and fireqos;
+    - debian/patches/:
+      - d/p/upstream-(!lintian)*.patch, integrated by the upstream team (thanks
+        to the upstream team);
+      - d/p/upstream-lintian-spelling-error-silence.patch, introduce and submit.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Tue, 22 Nov 2016 17:42:47 +0000
+
 firehol (3.0.1+ds-3) unstable; urgency=medium
 
   * Debianization:

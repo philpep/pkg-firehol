@@ -2,7 +2,7 @@ Description: debianization -- FireQOS
  Make /etc/fireqos the configuration folder for FireQOS;
  see debian/fireqos.README.Debian for details.
 Author: Jerome Benoit <calculus@rezozer.net>
-Last-Update: 2015-12-26
+Last-Update: 2016-11-22
 
 --- a/sbin/fireqos.in
 +++ b/sbin/fireqos.in

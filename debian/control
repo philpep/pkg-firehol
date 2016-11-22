@@ -19,7 +19,7 @@ Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/firehol.git
 
 Package: firehol
 Architecture: all
-Depends: firehol-common (= ${binary:Version}), ${misc:Depends}
+Depends: firehol-common (= ${binary:Version}), lsb-base, ${misc:Depends}
 Recommends: fireqos (= ${binary:Version})
 Suggests: firehol-tools (= ${binary:Version}), firehol-doc (= ${binary:Version}), ulogd2
 Description: easy to use but powerful iptables stateful firewall (program)
@@ -52,7 +52,7 @@ Description: easy to use but powerful iptables stateful firewall (docs)
 
 Package: fireqos
 Architecture: all
-Depends: firehol-common (= ${binary:Version}), ${misc:Depends}
+Depends: firehol-common (= ${binary:Version}), lsb-base, ${misc:Depends}
 Recommends: firehol (= ${binary:Version})
 Suggests: firehol-tools (= ${binary:Version}), fireqos-doc (= ${binary:Version})
 Description: easy to use but powerful traffic shaping tool (program)
