@@ -56,7 +56,7 @@
 #    - update a kernel ipset, having the same name
 #
 # 5. It can commit all successfully updated files to a git repository.
-#    Just do 'git init' in /etc/firehol/ipsets to enable it.
+#    Just do 'git init' in $sysconfdir_POST/firehol/ipsets to enable it.
 #    If it is called with -g it will also push the committed changes
 #    to a remote git server (to have this done by cron, please set
 #    git to automatically push changes without human action).
@@ -80,7 +80,7 @@
 
 # -----------------------------------------------------------------------------
 
-VERSION='$Id: 09730e0f3bcd050698b5ca643a176b02fbb8c888 $'
+VERSION='$Id: 1225fcc131e066ce154086b738a87d1b7ec5a578 $'
 PROGRAM_FILE="${0}"
 PROGRAM_DIR="${0%/*}"
 if [ "$PROGRAM_DIR" = "$0" ]; then PROGRAM_DIR="."; fi
@@ -120,7 +120,7 @@ Y|IPRANGE_CMD|@IPRANGE@|iprange
 Y|DIRNAME_CMD|@DIRNAME@|dirname
 Y|TAIL_CMD|@TAIL@|tail
 Y|RENICE_CMD|@RENICE@|renice :
-Y|ZCAT_CMD|@ZCAT@|gzcat "gzip -dc"
+Y|ZCAT_CMD|@ZCAT@|zcat gzcat "gzip -dc"
 Y|DATE_CMD|@DATE@|date
 Y|DIFF_CMD|@DIFF@|diff
 Y|FLOCK_CMD|@FLOCK@|flock
@@ -152,6 +152,7 @@ Y|TAR_CMD|@TAR@|tar
 Y|IPSET_CMD|@IPSET@|ipset
 N|UNZIP_CMD|@UNZIP@|unzip
 N|FUNZIP_CMD|@FUNZIP@|funzip
+N|JQ_CMD|@JQ@|jq
 N|GIT_CMD|@GIT@|git
 !
 status=$?
@@ -325,7 +326,7 @@ fi
 # CONFIGURATION
 
 FIREHOL_SHARE_DIR="${FIREHOL_SHARE_DIR-/usr/share/firehol}"
-FIREHOL_CONFIG_DIR="${FIREHOL_CONFIG_DIR-/etc/firehol}"
+FIREHOL_CONFIG_DIR="${FIREHOL_CONFIG_DIR-$sysconfdir_POST/firehol}"
 
 if [ "${UID}" = "0" -o -z "${UID}" ]
 	then
@@ -633,15 +634,16 @@ ipset_shall_be_run() {
 
 	if [ ! -f "${BASE_DIR}/${ipset}.source" ]
 	then
-		# cleanup - not required - it slows down because it saves the cache
-		# [ ! -z "${IPSET_CHECKED_DATE[${ipset}]}" ] && cache_remove_ipset "${ipset}"
-
 		if [ ${ENABLE_ALL} -eq 1 -a -z "${IPSET_TMP_DO_NOT_ENABLE_WITH_ALL[${ipset}]}" ]
 			then
 			ipset_silent "${ipset}" "Enabling due to --enable-all option."
 			$TOUCH_CMD -t 0001010000 "${BASE_DIR}/${ipset}.source" || return 1
 		else
 			ipset_disabled "${ipset}"
+
+			# cleanup the cache
+			[ ! -z "${IPSET_CHECKED_DATE[${ipset}]}" ] && cache_remove_ipset "${ipset}"
+
 			return 1
 		fi
 	fi
@@ -649,7 +651,7 @@ ipset_shall_be_run() {
 	if [ ${#RUN_ONLY_THESE_IPSETS[@]} -ne 0 -a -z "${RUN_ONLY_THESE_IPSETS[${ipset}]}" ]
 		then
 		ipset_verbose "${ipset}" "skipping - not requested"
-		return 1
+		return 2
 	fi
 
 	return 0
@@ -793,7 +795,7 @@ git_add_if_not_already_added() {
 git_ignore_file() {
 	local file="${1}"
 
-	local found=$($CAT_CMD "${BASE_DIR}/.gitignore" | $GREP_CMD "^${file}$$")
+	local found=$($CAT_CMD "${BASE_DIR}/.gitignore" | $GREP_CMD "^${file}$")
 	if [ -z "${found}" ]
 		then
 		echo "${file}" >>"${BASE_DIR}/.gitignore" || return 1
@@ -1006,8 +1008,26 @@ downloader_log() {
 	esac
 }
 
+copyfile() {
+	local file="${1}" reference="${2}" url="${3}"
+	eval "local doptions=(${4})"
+
+	if [ ! -z "${doptions[0]}" -a -f "${doptions[0]}" ]
+		then
+		$CAT_CMD "${doptions[0]}" >"${file}"
+		$TOUCH_CMD -r "${doptions[0]}" "${file}"
+		DOWNLOADER_MESSAGE="copied file '${doptions[0]}'"
+		return ${DOWNLOADER_OK}
+	fi
+
+	DOWNLOADER_MESSAGE="file '${doptions[0]}' is not found"
+	return ${DOWNLOADER_FAILED}
+}
+
 geturl() {
-	local file="${1}" reference="${2}" url="${3}" ret= http_code= curl_opts= message=
+	local file="${1}" reference="${2}" url="${3}" doptions=() ret= http_code= curl_opts= message=
+
+	eval "local doptions=(${4})"
 
 	if [ -z "${reference}" ]
 		then
@@ -1022,13 +1042,13 @@ geturl() {
 	curl_opts="--silent"
 	[ ${VERBOSE} -eq 1 ] && curl_opts=
 
-	downloader_log verbose "curl '${url}'"
+	downloader_log verbose "curl ${doptions} '${url}'"
 	http_code=$( \
 		$CURL_CMD --connect-timeout ${MAX_CONNECT_TIME} --max-time ${MAX_DOWNLOAD_TIME} \
-			--retry 0 --fail --compressed --user-agent "FireHOL-Update-Ipsets/3.0" \
+			--retry 0 --fail --compressed --user-agent "FireHOL-Update-Ipsets/3.0 (linux-gnu)" \
 			--time-cond "${reference}" --output "${file}" --remote-time \
 			--location --referer "http://iplists.firehol.org/" \
-			${curl_opts} --write-out '%{http_code}' "${url}" \
+			${curl_opts} --write-out '%{http_code}' "${doptions[@]}" "${url}" \
 		)
 	ret=$?
 
@@ -1155,7 +1175,7 @@ download_manager() {
 	DOWNLOADER_IPSET="${ipset}"
 
 	ipset_verbose "${ipset}" "running downloader '${IPSET_DOWNLOADER[${ipset}]}'"
-	"${IPSET_DOWNLOADER[${ipset}]}" "${tmp}" "${reference}" "${url}"
+	"${IPSET_DOWNLOADER[${ipset}]}" "${tmp}" "${reference}" "${url}" "${IPSET_DOWNLOADER_OPTIONS[${ipset}]}"
 	ret=$?
 	ipset_info "${ipset}" "${DOWNLOADER_MESSAGE}"
 
@@ -1258,11 +1278,10 @@ declare -A IPSET_MIN_UPDATE_TIME=()
 declare -A IPSET_MAX_UPDATE_TIME=()
 
 declare -A IPSET_DOWNLOADER=()
+declare -A IPSET_DOWNLOADER_OPTIONS=()
 
 # TODO - FIXME
 #declare -A IPSET_PREFIXES=()
-#declare -A IPSET_DOWNLOADER=()
-#declare -A IPSET_DOWNLOADER_OPTIONS=()
 
 cache_save() {
 	#info "Saving cache"
@@ -1303,6 +1322,7 @@ cache_save() {
 		IPSET_MIN_UPDATE_TIME \
 		IPSET_MAX_UPDATE_TIME \
 		IPSET_DOWNLOADER \
+		IPSET_DOWNLOADER_OPTIONS \
 		>"${BASE_DIR}/.cache.new.$$"
 
 	[ -f "${BASE_DIR}/.cache" ] && $CP_CMD "${BASE_DIR}/.cache" "${BASE_DIR}/.cache.old"
@@ -1355,6 +1375,7 @@ cache_remove_ipset() {
 	unset IPSET_MIN_UPDATE_TIME[${ipset}]
 	unset IPSET_MAX_UPDATE_TIME[${ipset}]
 	unset IPSET_DOWNLOADER[${ipset}]
+	unset IPSET_DOWNLOADER_OPTIONS[${ipset}]
 
 	cache_save
 }
@@ -1633,14 +1654,32 @@ retention_detect() {
 	ipset_silent "${ipset}" "comparing this update against all past"
 
 	# find the new/* files that are affected
+	local -a new_files=("${LIB_DIR}/${ipset}/new"/*)
 	local name1= name2= entries1= entries2= ips1= ips2= combined= common= odate= hours= removed=
-	${IPRANGE_CMD} "${LIB_DIR}/${ipset}/latest" --compare-next "${LIB_DIR}/${ipset}/new"/* |\
-		while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
-		do
-			[ $[ combined - ips1 ] -ne 0 -o $[ ips2 - common ] -ne 0 ] && echo "${name2}"
-		done | $SORT_CMD -u >"${RUN_DIR}/retention_affected_updates"
+	if [ ${#new_files[@]} -gt 0 ]
+		then
+		# we are searching for the affected files
+		# to find them we compare:
+		#
+		# > ips1 (the number of IPs in the latest)
+		# > combined (the number of IPs in both the latest and the history file in question)
+		#   when ips1 = combined, all IPs in the history file in question are still in the latest
+		#
+		# > ips2 (the number of IPs in the history file in question)
+		# > common (the IPs common in latest and the history file in question)
+		#   when ips2 = common, all IPs in the history file in question are still in the latest
+		#
+		${IPRANGE_CMD} "${LIB_DIR}/${ipset}/latest" --compare-next "${new_files[@]}" |\
+			while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
+			do
+				[ $[ combined - ips1 ] -ne 0 -o $[ ips2 - common ] -ne 0 ] && echo "${name2}"
+			done | $SORT_CMD -u >"${RUN_DIR}/retention_affected_updates"
 
-	[ $? -ne 0 ] && ipset_error "${ipset}" "cannot find its affected updates"
+		[ $? -ne 0 ] && ipset_error "${ipset}" "cannot find its affected updates"
+	else
+		[ -f "${RUN_DIR}/retention_affected_updates" ] && ${RM_CMD} "${RUN_DIR}/retention_affected_updates"
+		${TOUCH_CMD} "${RUN_DIR}/retention_affected_updates"
+	fi
 
 	local x=
 	for x in $($CAT_CMD "${RUN_DIR}/retention_affected_updates")
@@ -1701,13 +1740,25 @@ retention_detect() {
 
 	ipset_verbose "${ipset}" "determining the age of currently listed IPs..."
 
+	if [ "${#RETENTION_HISTOGRAM[@]}" -eq 0 ]
+		then
+		RETENTION_HISTOGRAM=()
+	fi
+
 	# empty the remaining IPs counters
 	# they will be re-calculated below
 	RETENTION_HISTOGRAM_REST=()
 	RETENTION_HISTOGRAM_INCOMPLETE=0
 
 	# find the IPs in all new/*
-	${IPRANGE_CMD} --count-unique-all "${LIB_DIR}/${ipset}/new"/* >"${RUN_DIR}/retention_rest" 2>/dev/null
+	local -a new_files=("${LIB_DIR}/${ipset}/new"/*)
+	if [ "${#new_files[@]}" -gt 0 ]
+		then
+		${IPRANGE_CMD} --count-unique-all "${new_files[@]}" >"${RUN_DIR}/retention_rest" 2>/dev/null
+	else
+		[ -f "${RUN_DIR}/retention_rest" ] && ${RM_CMD} "${RUN_DIR}/retention_rest"
+		${TOUCH_CMD} "${RUN_DIR}/retention_rest"
+	fi
 
 	local entries= ips=
 	while IFS="," read x entries ips
@@ -2024,27 +2075,25 @@ update_web() {
 
 	local before=$($DATE_CMD +%s)
 	${IPRANGE_CMD} --compare "${all[@]}" |\
+		${GREP_CMD} -v ",0$" |\
 		$SORT_CMD |\
 		while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
 		do
-			if [ ${common} -gt 0 ]
+			if [ ! -f "${RUN_DIR}/${name1}_comparison.json" ]
 				then
-				if [ ! -f "${RUN_DIR}/${name1}_comparison.json" ]
-					then
-					printf >"${RUN_DIR}/${name1}_comparison.json" "[\n"
-				else
-					printf >>"${RUN_DIR}/${name1}_comparison.json" ",\n"
-				fi
-				printf >>"${RUN_DIR}/${name1}_comparison.json" "	{\n		\"name\": \"${name2}\",\n		\"category\": \"${IPSET_CATEGORY[${name2}]}\",\n		\"ips\": ${ips2},\n		\"common\": ${common}\n	}"
-
-				if [ ! -f "${RUN_DIR}/${name2}_comparison.json" ]
-					then
-					printf >"${RUN_DIR}/${name2}_comparison.json" "[\n"
-				else
-					printf >>"${RUN_DIR}/${name2}_comparison.json" ",\n"
-				fi
-				printf >>"${RUN_DIR}/${name2}_comparison.json" "	{\n		\"name\": \"${name1}\",\n		\"category\": \"${IPSET_CATEGORY[${name1}]}\",\n		\"ips\": ${ips1},\n		\"common\": ${common}\n	}"
+				printf >"${RUN_DIR}/${name1}_comparison.json" "[\n"
+			else
+				printf >>"${RUN_DIR}/${name1}_comparison.json" ",\n"
 			fi
+			printf >>"${RUN_DIR}/${name1}_comparison.json" "	{\n		\"name\": \"${name2}\",\n		\"category\": \"${IPSET_CATEGORY[${name2}]}\",\n		\"ips\": ${ips2},\n		\"common\": ${common}\n	}"
+
+			if [ ! -f "${RUN_DIR}/${name2}_comparison.json" ]
+				then
+				printf >"${RUN_DIR}/${name2}_comparison.json" "[\n"
+			else
+				printf >>"${RUN_DIR}/${name2}_comparison.json" ",\n"
+			fi
+			printf >>"${RUN_DIR}/${name2}_comparison.json" "	{\n		\"name\": \"${name1}\",\n		\"category\": \"${IPSET_CATEGORY[${name1}]}\",\n		\"ips\": ${ips1},\n		\"common\": ${common}\n	}"
 		done
 	for x in $($FIND_CMD "${RUN_DIR}" -name \*_comparison.json)
 	do
@@ -2053,7 +2102,7 @@ update_web() {
 	local after=$($DATE_CMD +%s)
 	[ ${after} -eq ${before} ] && after=$[before + 1]
 
-	echo >&2 "Comparison of $[all_count * (all_count - 1) / 2 - 1] ipsets took $[after - before] seconds: (i.e. $[(all_count * (all_count - 1) / 2 - 1) / (after - before)] ipset comparisons/s)"
+	echo >&2 "$[all_count * (all_count - 1) / 2 - 1] ipset comparisons made in $[after - before] seconds ($[(all_count * (all_count - 1) / 2 - 1) / (after - before)] ipset comparisons/s)"
 	echo >&2
 
 	if [ "${#updated[*]}" -ne 0 -a "${#geolite2_country[*]}" -ne 0 ]
@@ -2064,20 +2113,18 @@ update_web() {
 		echo >&2 "Comparing updated ipsets with GeoLite2 country..."
 
 		${IPRANGE_CMD} "${updated[@]}" --compare-next "${geolite2_country[@]}" |\
+			${GREP_CMD} -v ",0$" |\
 			$SORT_CMD |\
 			while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
 			do
-				if [ ${common} -gt 0 ]
+				if [ ! -f "${RUN_DIR}/${name1}_geolite2_country.json" ]
 					then
-					if [ ! -f "${RUN_DIR}/${name1}_geolite2_country.json" ]
-						then
-						printf "[\n" >"${RUN_DIR}/${name1}_geolite2_country.json"
-					else
-						printf ",\n" >>"${RUN_DIR}/${name1}_geolite2_country.json"
-					fi
-
-					printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_geolite2_country.json"
+					printf "[\n" >"${RUN_DIR}/${name1}_geolite2_country.json"
+				else
+					printf ",\n" >>"${RUN_DIR}/${name1}_geolite2_country.json"
 				fi
+
+				printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_geolite2_country.json"
 			done
 		echo >&2
 		for x in $($FIND_CMD "${RUN_DIR}" -name \*_geolite2_country.json)
@@ -2092,20 +2139,18 @@ update_web() {
 		echo >&2 "Comparing updated ipsets with IPDeny country..."
 
 		${IPRANGE_CMD} "${updated[@]}" --compare-next "${ipdeny_country[@]}" |\
+			${GREP_CMD} -v ",0$" |\
 			$SORT_CMD |\
 			while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
 			do
-				if [ ${common} -gt 0 ]
+				if [ ! -f "${RUN_DIR}/${name1}_ipdeny_country.json" ]
 					then
-					if [ ! -f "${RUN_DIR}/${name1}_ipdeny_country.json" ]
-						then
-						printf "[\n" >"${RUN_DIR}/${name1}_ipdeny_country.json"
-					else
-						printf ",\n" >>"${RUN_DIR}/${name1}_ipdeny_country.json"
-					fi
-
-					printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_ipdeny_country.json"
+					printf "[\n" >"${RUN_DIR}/${name1}_ipdeny_country.json"
+				else
+					printf ",\n" >>"${RUN_DIR}/${name1}_ipdeny_country.json"
 				fi
+
+				printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_ipdeny_country.json"
 			done
 		echo >&2
 		for x in $($FIND_CMD "${RUN_DIR}" -name \*_ipdeny_country.json)
@@ -2122,20 +2167,18 @@ update_web() {
 		echo >&2 "Comparing updated ipsets with IP2Location country..."
 
 		${IPRANGE_CMD} "${updated[@]}" --compare-next "${ip2location_country[@]}" |\
+			${GREP_CMD} -v ",0$" |\
 			$SORT_CMD |\
 			while IFS="," read name1 name2 entries1 entries2 ips1 ips2 combined common
 			do
-				if [ ${common} -gt 0 ]
+				if [ ! -f "${RUN_DIR}/${name1}_ip2location_country.json" ]
 					then
-					if [ ! -f "${RUN_DIR}/${name1}_ip2location_country.json" ]
-						then
-						printf "[\n" >"${RUN_DIR}/${name1}_ip2location_country.json"
-					else
-						printf ",\n" >>"${RUN_DIR}/${name1}_ip2location_country.json"
-					fi
-
-					printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_ip2location_country.json"
+					printf "[\n" >"${RUN_DIR}/${name1}_ip2location_country.json"
+				else
+					printf ",\n" >>"${RUN_DIR}/${name1}_ip2location_country.json"
 				fi
+
+				printf "	{\n		\"code\": \"${name2}\",\n		\"value\": ${common}\n	}" >>"${RUN_DIR}/${name1}_ip2location_country.json"
 			done
 		echo >&2
 		for x in $($FIND_CMD "${RUN_DIR}" -name \*_ip2location_country.json)
@@ -2179,9 +2222,9 @@ update_web() {
 
 	print_ipset_reset
 
+	$CHMOD_CMD 0644 "${RUN_DIR}"/*.{json,csv,xml}
 	$MV_CMD -f "${RUN_DIR}"/*.{json,csv,xml} "${WEB_DIR}/"
-	[ ! -z "${WEB_OWNER}" ] && $CHOWN_CMD -R ${WEB_OWNER} "${WEB_DIR}"
-	$CHMOD_CMD 0644 "${WEB_DIR}"/*.{json,csv,xml}
+	[ ! -z "${WEB_OWNER}" ] && $CHOWN_CMD ${WEB_OWNER} "${WEB_DIR}"/*.{json,csv,xml}
 
 	if [ ${PUSH_TO_GIT} -eq 1 ]
 		then
@@ -2321,6 +2364,7 @@ ipset_attributes() {
 			inbound|outbound)		IPSET_PROTECTION[${ipset}]="${1}"; shift; continue ;;
 
 			downloader)				IPSET_DOWNLOADER[${ipset}]="${2}" ;;
+			downloader_options)		IPSET_DOWNLOADER_OPTIONS[${ipset}]="${2}" ;;
 			category)				IPSET_CATEGORY[${ipset}]="${2}" ;;
 			maintainer)				IPSET_MAINTAINER[${ipset}]="${2}" ;;
 			maintainer_url)			IPSET_MAINTAINER_URL[${ipset}]="${2}" ;;
@@ -2386,9 +2430,9 @@ finalize() {
 		info="${category}"
 	fi
 
-	if [ -f "${dst}" -a ${REPROCESS_ALL} -eq 0 ]
+	if [ -f "${BASE_DIR}/${dst}" -a ${REPROCESS_ALL} -eq 0 ]
 		then
-		${IPRANGE_CMD} "${dst}" --diff "${tmp}" --quiet
+		${IPRANGE_CMD} "${BASE_DIR}/${dst}" --diff "${tmp}" --quiet
 		if [ $? -eq 0 ]
 		then
 			# they are the same
@@ -2401,7 +2445,11 @@ finalize() {
 
 			check_file_too_old "${ipset}" "${BASE_DIR}/${dst}"
 			return 0
+	#	else
+	#		ipset_info "${ipset}" "processed file differs from the last."
 		fi
+	#else
+	#	ipset_info "${ipset}" "not comparing file with the last."
 	fi
 
 	# calculate how many entries/IPs are in it
@@ -2539,7 +2587,21 @@ EOFHEADER
 
 	if [ -d "${BASE_DIR}/.git" ]
 	then
-		echo >"${BASE_DIR}/${dst}.setinfo" "[${ipset}](${WEB_URL}${ipset})|${info}|${ipv} hash:${hash}|${quantity}|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+		# --- BEGIN: Fix bug with duplicate setinfo files ---
+		# fix a bug where the .setinfo file was created
+		# using the ${dst} name, instead of the ${ipset} name
+		if [ "${dst}.setinfo" != "${ipset}.setinfo" -a -f "${BASE_DIR}/${dst}.setinfo" ]
+			then
+			if [ ! -f "${BASE_DIR}/${ipset}.setinfo" -o "${BASE_DIR}/${dst}.setinfo" -nt "${BASE_DIR}/${ipset}.setinfo" ]
+				then
+				${MV_CMD} "${BASE_DIR}/${dst}.setinfo" "${BASE_DIR}/${ipset}.setinfo"
+			else
+				${RM_CMD} "${BASE_DIR}/${dst}.setinfo"
+			fi
+		fi
+		# --- END: Fix bug with duplicate setinfo files ---
+
+		echo >"${BASE_DIR}/${ipset}.setinfo" "[${ipset}](${WEB_URL}${ipset})|${info}|${ipv} hash:${hash}|${quantity}|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
 		if [ -z "${IPSET_TMP_DO_NOT_REDISTRIBUTE[${ipset}]}" ]
 			then
 			git_add_if_not_already_added "${dst}"
@@ -2631,11 +2693,16 @@ update() {
 
 	# check if it is enabled
 	ipset_shall_be_run "${ipset}"
-	if [ $? -ne 0 ]
-		then
-		[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
-		return 1
-	fi
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
 
 	# do we have something to download?
 	if [ ! -z "${url}" ]
@@ -2912,6 +2979,7 @@ rename_ipset() {
 	[ -z "${IPSET_MIN_UPDATE_TIME[${new}]}" ] && IPSET_MIN_UPDATE_TIME[${new}]="${IPSET_MIN_UPDATE_TIME[${old}]}"
 	[ -z "${IPSET_MAX_UPDATE_TIME[${new}]}" ] && IPSET_MAX_UPDATE_TIME[${new}]="${IPSET_MAX_UPDATE_TIME[${old}]}"
 	[ -z "${IPSET_DOWNLOADER[${new}]}" ] && IPSET_DOWNLOADER[${new}]="${IPSET_DOWNLOADER[${old}]}"
+	[ -z "${IPSET_DOWNLOADER_OPTIONS[${new}]}" ] && IPSET_DOWNLOADER_OPTIONS[${new}]="${IPSET_DOWNLOADER_OPTIONS[${old}]}"
 	cache_remove_ipset "${old}" # this also saves the cache
 
 	cd "${RUN_DIR}"
@@ -3255,13 +3323,20 @@ p2p_gz() {
 		${IPRANGE_CMD}
 }
 
+p2p_gz_ips() {
+	$ZCAT_CMD |\
+		$CUT_CMD -d ':' -f 2 |\
+		$EGREP_CMD "^${IP4_MATCH}-${IP4_MATCH}$" |\
+		${IPRANGE_CMD} -1
+}
+
 # extract only the lines starting with Proxy from the P2P blocklist
 p2p_gz_proxy() {
 	$ZCAT_CMD |\
 		$GREP_CMD "^Proxy" |\
 		$CUT_CMD -d ':' -f 2 |\
 		$EGREP_CMD "^${IP4_MATCH}-${IP4_MATCH}$" |\
-		${IPRANGE_CMD}
+		${IPRANGE_CMD} -1
 }
 
 # get the first column from the csv
@@ -3340,11 +3415,16 @@ geolite2_country() {
 		ret=
 
 	ipset_shall_be_run "${ipset}"
-	if [ $? -ne 0 ]
-		then
-		[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
-		return 1
-	fi
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
 
 	# download it
 	download_manager "${ipset}" "${mins}" "${url}"
@@ -3429,6 +3509,8 @@ geolite2_country() {
 			ipset_verbose "${ipset}" "extracting country '${id}' (code='${iso}', name='${name}')..."
 			if [ -f "country.${id}.source.tmp" ]
 			then
+				[ "${name}" = "Macedonia" ] && name="F.Y.R.O.M."
+
 				[ ! -z "${cid}" ] && $CAT_CMD "country.${id}.source.tmp" >>"continent_${cid,,}.source.tmp"
 				[ ! -z "${iso}" ] && $CAT_CMD "country.${id}.source.tmp" >>"country_${iso,,}.source.tmp"
 				$RM_CMD "country.${id}.source.tmp"
@@ -3480,7 +3562,7 @@ geolite2_country() {
 	return 0
 }
 
-declare -A IPDENY_COUNTRY_NAMES='([eu]="European Union" [ap]="African Regional Industrial Property Organization" [as]="American Samoa" [ge]="Georgia" [ar]="Argentina" [gd]="Grenada" [dm]="Dominica" [kp]="North Korea" [rw]="Rwanda" [gg]="Guernsey" [qa]="Qatar" [ni]="Nicaragua" [do]="Dominican Republic" [gf]="French Guiana" [ru]="Russia" [kr]="Republic of Korea" [aw]="Aruba" [ga]="Gabon" [rs]="Serbia" [no]="Norway" [nl]="Netherlands" [au]="Australia" [kw]="Kuwait" [dj]="Djibouti" [at]="Austria" [gb]="United Kingdom" [dk]="Denmark" [ky]="Cayman Islands" [gm]="Gambia" [ug]="Uganda" [gl]="Greenland" [de]="Germany" [nc]="New Caledonia" [az]="Azerbaijan" [hr]="Croatia" [na]="Namibia" [gn]="Guinea" [kz]="Kazakhstan" [et]="Ethiopia" [ht]="Haiti" [es]="Spain" [gi]="Gibraltar" [nf]="Norfolk Island" [ng]="Nigeria" [gh]="Ghana" [hu]="Hungary" [er]="Eritrea" [ua]="Ukraine" [ne]="Niger" [yt]="Mayotte" [gu]="Guam" [nz]="New Zealand" [om]="Oman" [gt]="Guatemala" [gw]="Guinea-Bissau" [hk]="Hong Kong" [re]="Réunion" [ag]="Antigua and Barbuda" [gq]="Equatorial Guinea" [ke]="Kenya" [gp]="Guadeloupe" [uz]="Uzbekistan" [af]="Afghanistan" [hn]="Honduras" [uy]="Uruguay" [dz]="Algeria" [kg]="Kyrgyzstan" [ae]="United Arab Emirates" [ad]="Andorra" [gr]="Greece" [ki]="Kiribati" [nr]="Nauru" [eg]="Egypt" [kh]="Cambodia" [ro]="Romania" [ai]="Anguilla" [np]="Nepal" [ee]="Estonia" [us]="United States" [ec]="Ecuador" [gy]="Guyana" [ao]="Angola" [km]="Comoros" [am]="Armenia" [ye]="Yemen" [nu]="Niue" [kn]="Saint Kitts and Nevis" [al]="Albania" [si]="Slovenia" [fr]="France" [bf]="Burkina Faso" [mw]="Malawi" [cy]="Cyprus" [vc]="Saint Vincent and the Grenadines" [mv]="Maldives" [bg]="Bulgaria" [pr]="Puerto Rico" [sk]="Slovak Republic" [bd]="Bangladesh" [mu]="Mauritius" [ps]="Palestine" [va]="Vatican City" [cz]="Czech Republic" [be]="Belgium" [mt]="Malta" [zm]="Zambia" [ms]="Montserrat" [bb]="Barbados" [sm]="San Marino" [pt]="Portugal" [io]="British Indian Ocean Territory" [vg]="British Virgin Islands" [sl]="Sierra Leone" [mr]="Mauritania" [la]="Laos" [in]="India" [ws]="Samoa" [mq]="Martinique" [im]="Isle of Man" [lb]="Lebanon" [tz]="Tanzania" [so]="Somalia" [mp]="Northern Mariana Islands" [ve]="Venezuela" [lc]="Saint Lucia" [ba]="Bosnia and Herzegovina" [sn]="Senegal" [pw]="Palau" [il]="Israel" [tt]="Trinidad and Tobago" [bn]="Brunei" [sa]="Saudi Arabia" [bo]="Bolivia" [py]="Paraguay" [bl]="Saint-Barthélemy" [tv]="Tuvalu" [sc]="Seychelles" [vi]="U.S. Virgin Islands" [cr]="Costa Rica" [bm]="Bermuda" [sb]="Solomon Islands" [tw]="Taiwan" [cu]="Cuba" [se]="Sweden" [bj]="Benin" [vn]="Vietnam" [li]="Liechtenstein" [mz]="Mozambique" [sd]="Sudan" [cw]="Curaçao" [ie]="Ireland" [sg]="Singapore" [jp]="Japan" [my]="Malaysia" [tr]="Turkey" [bh]="Bahrain" [mx]="Mexico" [cv]="Cape Verde" [id]="Indonesia" [lk]="Sri Lanka" [za]="South Africa" [bi]="Burundi" [ci]="Ivory Coast" [tl]="East Timor" [mg]="Madagascar" [lt]="Republic of Lithuania" [sy]="Syria" [sx]="Sint Maarten" [pa]="Panama" [mf]="Saint Martin" [lu]="Luxembourg" [ch]="Switzerland" [tm]="Turkmenistan" [bw]="Botswana" [jo]="Hashemite Kingdom of Jordan" [me]="Montenegro" [tn]="Tunisia" [ck]="Cook Islands" [bt]="Bhutan" [lv]="Latvia" [wf]="Wallis and Futuna" [to]="Tonga" [jm]="Jamaica" [sz]="Swaziland" [md]="Republic of Moldova" [br]="Brazil" [mc]="Monaco" [cm]="Cameroon" [th]="Thailand" [pe]="Peru" [cl]="Chile" [bs]="Bahamas" [pf]="French Polynesia" [co]="Colombia" [ma]="Morocco" [lr]="Liberia" [tj]="Tajikistan" [bq]="Bonaire, Sint Eustatius, and Saba" [tk]="Tokelau" [vu]="Vanuatu" [pg]="Papua New Guinea" [cn]="China" [ls]="Lesotho" [ca]="Canada" [is]="Iceland" [td]="Chad" [fj]="Fiji" [mo]="Macao" [ph]="Philippines" [mn]="Mongolia" [zw]="Zimbabwe" [ir]="Iran" [ss]="South Sudan" [mm]="Myanmar (Burma)" [iq]="Iraq" [sr]="Suriname" [je]="Jersey" [ml]="Mali" [tg]="Togo" [pk]="Pakistan" [fi]="Finland" [bz]="Belize" [pl]="Poland" [mk]="Former Yugoslav Republic of Macedonia" [pm]="Saint Pierre and Miquelon" [fo]="Faroe Islands" [st]="São Tomé and Príncipe" [ly]="Libya" [cd]="Congo" [cg]="Republic of the Congo" [sv]="El Salvador" [tc]="Turks and Caicos Islands" [it]="Italy" [fm]="Federated States of Micronesia" [mh]="Marshall Islands" [by]="Belarus" [cf]="Central African Republic" )'
+declare -A IPDENY_COUNTRY_NAMES='([eu]="European Union" [ap]="African Regional Industrial Property Organization" [as]="American Samoa" [ge]="Georgia" [ar]="Argentina" [gd]="Grenada" [dm]="Dominica" [kp]="North Korea" [rw]="Rwanda" [gg]="Guernsey" [qa]="Qatar" [ni]="Nicaragua" [do]="Dominican Republic" [gf]="French Guiana" [ru]="Russia" [kr]="Republic of Korea" [aw]="Aruba" [ga]="Gabon" [rs]="Serbia" [no]="Norway" [nl]="Netherlands" [au]="Australia" [kw]="Kuwait" [dj]="Djibouti" [at]="Austria" [gb]="United Kingdom" [dk]="Denmark" [ky]="Cayman Islands" [gm]="Gambia" [ug]="Uganda" [gl]="Greenland" [de]="Germany" [nc]="New Caledonia" [az]="Azerbaijan" [hr]="Croatia" [na]="Namibia" [gn]="Guinea" [kz]="Kazakhstan" [et]="Ethiopia" [ht]="Haiti" [es]="Spain" [gi]="Gibraltar" [nf]="Norfolk Island" [ng]="Nigeria" [gh]="Ghana" [hu]="Hungary" [er]="Eritrea" [ua]="Ukraine" [ne]="Niger" [yt]="Mayotte" [gu]="Guam" [nz]="New Zealand" [om]="Oman" [gt]="Guatemala" [gw]="Guinea-Bissau" [hk]="Hong Kong" [re]="Réunion" [ag]="Antigua and Barbuda" [gq]="Equatorial Guinea" [ke]="Kenya" [gp]="Guadeloupe" [uz]="Uzbekistan" [af]="Afghanistan" [hn]="Honduras" [uy]="Uruguay" [dz]="Algeria" [kg]="Kyrgyzstan" [ae]="United Arab Emirates" [ad]="Andorra" [gr]="Greece" [ki]="Kiribati" [nr]="Nauru" [eg]="Egypt" [kh]="Cambodia" [ro]="Romania" [ai]="Anguilla" [np]="Nepal" [ee]="Estonia" [us]="United States" [ec]="Ecuador" [gy]="Guyana" [ao]="Angola" [km]="Comoros" [am]="Armenia" [ye]="Yemen" [nu]="Niue" [kn]="Saint Kitts and Nevis" [al]="Albania" [si]="Slovenia" [fr]="France" [bf]="Burkina Faso" [mw]="Malawi" [cy]="Cyprus" [vc]="Saint Vincent and the Grenadines" [mv]="Maldives" [bg]="Bulgaria" [pr]="Puerto Rico" [sk]="Slovak Republic" [bd]="Bangladesh" [mu]="Mauritius" [ps]="Palestine" [va]="Vatican City" [cz]="Czech Republic" [be]="Belgium" [mt]="Malta" [zm]="Zambia" [ms]="Montserrat" [bb]="Barbados" [sm]="San Marino" [pt]="Portugal" [io]="British Indian Ocean Territory" [vg]="British Virgin Islands" [sl]="Sierra Leone" [mr]="Mauritania" [la]="Laos" [in]="India" [ws]="Samoa" [mq]="Martinique" [im]="Isle of Man" [lb]="Lebanon" [tz]="Tanzania" [so]="Somalia" [mp]="Northern Mariana Islands" [ve]="Venezuela" [lc]="Saint Lucia" [ba]="Bosnia and Herzegovina" [sn]="Senegal" [pw]="Palau" [il]="Israel" [tt]="Trinidad and Tobago" [bn]="Brunei" [sa]="Saudi Arabia" [bo]="Bolivia" [py]="Paraguay" [bl]="Saint-Barthélemy" [tv]="Tuvalu" [sc]="Seychelles" [vi]="U.S. Virgin Islands" [cr]="Costa Rica" [bm]="Bermuda" [sb]="Solomon Islands" [tw]="Taiwan" [cu]="Cuba" [se]="Sweden" [bj]="Benin" [vn]="Vietnam" [li]="Liechtenstein" [mz]="Mozambique" [sd]="Sudan" [cw]="Curaçao" [ie]="Ireland" [sg]="Singapore" [jp]="Japan" [my]="Malaysia" [tr]="Turkey" [bh]="Bahrain" [mx]="Mexico" [cv]="Cape Verde" [id]="Indonesia" [lk]="Sri Lanka" [za]="South Africa" [bi]="Burundi" [ci]="Ivory Coast" [tl]="East Timor" [mg]="Madagascar" [lt]="Republic of Lithuania" [sy]="Syria" [sx]="Sint Maarten" [pa]="Panama" [mf]="Saint Martin" [lu]="Luxembourg" [ch]="Switzerland" [tm]="Turkmenistan" [bw]="Botswana" [jo]="Hashemite Kingdom of Jordan" [me]="Montenegro" [tn]="Tunisia" [ck]="Cook Islands" [bt]="Bhutan" [lv]="Latvia" [wf]="Wallis and Futuna" [to]="Tonga" [jm]="Jamaica" [sz]="Swaziland" [md]="Republic of Moldova" [br]="Brazil" [mc]="Monaco" [cm]="Cameroon" [th]="Thailand" [pe]="Peru" [cl]="Chile" [bs]="Bahamas" [pf]="French Polynesia" [co]="Colombia" [ma]="Morocco" [lr]="Liberia" [tj]="Tajikistan" [bq]="Bonaire, Sint Eustatius, and Saba" [tk]="Tokelau" [vu]="Vanuatu" [pg]="Papua New Guinea" [cn]="China" [ls]="Lesotho" [ca]="Canada" [is]="Iceland" [td]="Chad" [fj]="Fiji" [mo]="Macao" [ph]="Philippines" [mn]="Mongolia" [zw]="Zimbabwe" [ir]="Iran" [ss]="South Sudan" [mm]="Myanmar (Burma)" [iq]="Iraq" [sr]="Suriname" [je]="Jersey" [ml]="Mali" [tg]="Togo" [pk]="Pakistan" [fi]="Finland" [bz]="Belize" [pl]="Poland" [mk]="F.Y.R.O.M." [pm]="Saint Pierre and Miquelon" [fo]="Faroe Islands" [st]="São Tomé and Príncipe" [ly]="Libya" [cd]="Congo" [cg]="Republic of the Congo" [sv]="El Salvador" [tc]="Turks and Caicos Islands" [it]="Italy" [fm]="Federated States of Micronesia" [mh]="Marshall Islands" [by]="Belarus" [cf]="Central African Republic" )'
 declare -A IPDENY_COUNTRY_CONTINENTS='([eu]="eu" [ap]="af" [as]="oc" [ge]="as" [ar]="sa" [gd]="na" [dm]="na" [kp]="as" [rw]="af" [gg]="eu" [qa]="as" [ni]="na" [do]="na" [gf]="sa" [ru]="eu" [kr]="as" [aw]="na" [ga]="af" [rs]="eu" [no]="eu" [nl]="eu" [au]="oc" [kw]="as" [dj]="af" [at]="eu" [gb]="eu" [dk]="eu" [ky]="na" [gm]="af" [ug]="af" [gl]="na" [de]="eu" [nc]="oc" [az]="as" [hr]="eu" [na]="af" [gn]="af" [kz]="as" [et]="af" [ht]="na" [es]="eu" [gi]="eu" [nf]="oc" [ng]="af" [gh]="af" [hu]="eu" [er]="af" [ua]="eu" [ne]="af" [yt]="af" [gu]="oc" [nz]="oc" [om]="as" [gt]="na" [gw]="af" [hk]="as" [re]="af" [ag]="na" [gq]="af" [ke]="af" [gp]="na" [uz]="as" [af]="as" [hn]="na" [uy]="sa" [dz]="af" [kg]="as" [ae]="as" [ad]="eu" [gr]="eu" [ki]="oc" [nr]="oc" [eg]="af" [kh]="as" [ro]="eu" [ai]="na" [np]="as" [ee]="eu" [us]="na" [ec]="sa" [gy]="sa" [ao]="af" [km]="af" [am]="as" [ye]="as" [nu]="oc" [kn]="na" [al]="eu" [si]="eu" [fr]="eu" [bf]="af" [mw]="af" [cy]="eu" [vc]="na" [mv]="as" [bg]="eu" [pr]="na" [sk]="eu" [bd]="as" [mu]="af" [ps]="as" [va]="eu" [cz]="eu" [be]="eu" [mt]="eu" [zm]="af" [ms]="na" [bb]="na" [sm]="eu" [pt]="eu" [io]="as" [vg]="na" [sl]="af" [mr]="af" [la]="as" [in]="as" [ws]="oc" [mq]="na" [im]="eu" [lb]="as" [tz]="af" [so]="af" [mp]="oc" [ve]="sa" [lc]="na" [ba]="eu" [sn]="af" [pw]="oc" [il]="as" [tt]="na" [bn]="as" [sa]="as" [bo]="sa" [py]="sa" [bl]="na" [tv]="oc" [sc]="af" [vi]="na" [cr]="na" [bm]="na" [sb]="oc" [tw]="as" [cu]="na" [se]="eu" [bj]="af" [vn]="as" [li]="eu" [mz]="af" [sd]="af" [cw]="na" [ie]="eu" [sg]="as" [jp]="as" [my]="as" [tr]="as" [bh]="as" [mx]="na" [cv]="af" [id]="as" [lk]="as" [za]="af" [bi]="af" [ci]="af" [tl]="oc" [mg]="af" [lt]="eu" [sy]="as" [sx]="na" [pa]="na" [mf]="na" [lu]="eu" [ch]="eu" [tm]="as" [bw]="af" [jo]="as" [me]="eu" [tn]="af" [ck]="oc" [bt]="as" [lv]="eu" [wf]="oc" [to]="oc" [jm]="na" [sz]="af" [md]="eu" [br]="sa" [mc]="eu" [cm]="af" [th]="as" [pe]="sa" [cl]="sa" [bs]="na" [pf]="oc" [co]="sa" [ma]="af" [lr]="af" [tj]="as" [bq]="na" [tk]="oc" [vu]="oc" [pg]="oc" [cn]="as" [ls]="af" [ca]="na" [is]="eu" [td]="af" [fj]="oc" [mo]="as" [ph]="as" [mn]="as" [zw]="af" [ir]="as" [ss]="af" [mm]="as" [iq]="as" [sr]="sa" [je]="eu" [ml]="af" [tg]="af" [pk]="as" [fi]="eu" [bz]="na" [pl]="eu" [mk]="eu" [pm]="na" [fo]="eu" [st]="af" [ly]="af" [cd]="af" [cg]="af" [sv]="na" [tc]="na" [it]="eu" [fm]="oc" [mh]="oc" [by]="eu" [cf]="af" )'
 declare -A IPDENY_COUNTRIES=()
 declare -A IPDENY_CONTINENTS=()
@@ -3494,11 +3576,16 @@ ipdeny_country() {
 		ret=
 
 	ipset_shall_be_run "${ipset}"
-	if [ $? -ne 0 ]
-		then
-		[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
-		return 1
-	fi
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
 
 	# download it
 	download_manager "${ipset}" "${mins}" "${url}"
@@ -3616,11 +3703,16 @@ ip2location_country() {
 		ret=
 
 	ipset_shall_be_run "${ipset}"
-	if [ $? -ne 0 ]
-		then
-		[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
-		return 1
-	fi
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
 
 	# download it
 	download_manager "${ipset}" "${mins}" "${url}"
@@ -3680,6 +3772,7 @@ ip2location_country() {
 			name="IPs that do not belong to any country"
 		fi
 
+		[ "${name}" = "Macedonia" ] && name="F.Y.R.O.M."
 		IP2LOCATION_COUNTRY_NAMES[${code}]="${name}"
 	done <countries
 
@@ -3745,6 +3838,60 @@ ip2location_country() {
 
 	return 0
 }
+
+eSentire() {
+	local base="https://raw.githubusercontent.com/eSentire/malfeed/master"
+
+	cd "${RUN_DIR}" || return 1
+
+	local ipset="esentire" limit="" hash="ip" ipv="ipv4" \
+		mins=$[24 * 60 * 1] history_mins=0 \
+		url="${base}/index.txt" \
+		info="[eSentire](https://github.com/eSentire/malfeed)" \
+		ret=
+
+	ipset_shall_be_run "${ipset}"
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/${ipset}.setinfo" "${ipset}|${info}|${ipv} hash:${hash}|disabled|`if [ ! -z "${url}" ]; then echo "updated every $(mins_to_text ${mins}) from [this link](${url})"; fi`"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
+
+	# download it
+	download_manager "${ipset}" "${mins}" "${url}"
+	ret=$?
+	if [ $ret -eq ${DOWNLOAD_FAILED} -o $ret -eq ${DOWNLOAD_NOT_UPDATED} ]
+		then
+		[ ! -s "${BASE_DIR}/${ipset}.source" ] && return 1
+		[ -d "${BASE_DIR}/${ipset}" -a ${REPROCESS_ALL} -eq 0 ] && return 1
+	fi
+
+	echo >"${RUN_DIR}/esentire.sh"
+	$CAT_CMD "${BASE_DIR}/${ipset}.source" |\
+		while IFS="," read file type description
+		do
+			name="$( echo "${file/_watch_ip.lst/}" | $TR_CMD -c "[a-zA-Z0-9\n]" "_")"
+			
+			$CAT_CMD >>"${RUN_DIR}/esentire.sh" <<EOF_ESENTIRE
+update esentire_${name} "${mins}" 0 ipv4 ip \
+	"${base}/${file}" \
+	remove_comments \
+	"malware" \
+	"${description}" \
+	"eSentire" "https://github.com/eSentire/malfeed"
+EOF_ESENTIRE
+		done
+
+	source "${RUN_DIR}/esentire.sh"
+
+	return 0
+}
+
 
 
 # -----------------------------------------------------------------------------
@@ -3896,6 +4043,42 @@ ip2location_country
 
 
 # -----------------------------------------------------------------------------
+# atlas.arbor.net
+
+atlas_parser() { ${EGREP_CMD} "^${IP4_MATCH}, \"" | ${CUT_CMD} -d ',' -f 1; }
+
+update atlas_attacks $[24 * 60] "$[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+	"https://atlas.arbor.net/summary/attacks.csv" \
+	atlas_parser \
+	"attacks" "[ATLAS Attacks](https://atlas.arbor.net/summary/attacks) - ATLAS uses lightweight honeypot sensors to detect and fingerprint the attacks launched by malicious sources on the Internet. In most cases the attacker is trying to take control of the target via a published exploit for a known vulnerability. A variety of exploit tools exist and are usually written specifically for each attack vector. Exploit attempts and attacks are most often launched from bots (hosts under an attacker's control), which will automatically try to exploit any possible host on the Internet. Attack origins are usually not spoofed, although the source host may be compromised or infected with malware." \
+	"Arbor Networks" "https://atlas.arbor.net/"
+
+update atlas_botnets $[24 * 60] "$[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+	"https://atlas.arbor.net/summary/botnets.csv" \
+	atlas_parser \
+	"attacks" "[ATLAS Botnets](https://atlas.arbor.net/summary/botnets) - Botnets are collections of compromised hosts that attackers remotely control for their own nefarious purposes. Once installed and running, a malicious bot will attempt to connect to a remote server to receive instructions on what actions to take. The most common command and control (C&C) protocol used for this is Internet Relay Chat (IRC). While a legitimate protocol for online chat, IRC is often used by attackers due to the relative simplicity of the protocol along with the ready availability of bot software written to use it. After connecting, a bot-controlled host can be controlled by an attacker and commanded to conduct malicious actions such as sending spam, scanning the Internet for other potentially controllable hosts, or launching DoS attacks. ATLAS maintains a real-time database of malicious botnet command and control servers that is continuously updated. This information comes from malware analysis, botnet infiltration, and other sources of data." \
+	"Arbor Networks" "https://atlas.arbor.net/"
+
+update atlas_fastflux $[24 * 60] "$[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+	"https://atlas.arbor.net/summary/fastflux.csv" \
+	atlas_parser \
+	"attacks" "[ATLAS Fastflux](https://atlas.arbor.net/summary/fastflux) - Fast flux hosting is a technique where the nodes in a botnet are used as the endpoints in a website hosting scheme. The DNS records change frequently, often every few minutes, to point to new bots. The actual nodes themselves simply proxy the request back to the central hosting location. This gives the botnet a robust hosting infrastructure. Many different kinds of botnets use fastflux DNS techniques, for malware hosting, for illegal content hosting, for phishing site hosting, and other such activities. These hosts are likely to be infected with some form of malware." \
+	"Arbor Networks" "https://atlas.arbor.net/"
+
+update atlas_phishing $[24 * 60] "$[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+	"https://atlas.arbor.net/summary/phishing.csv" \
+	atlas_parser \
+	"attacks" "[ATLAS Phishing](https://atlas.arbor.net/summary/fastflux) - Phishing servers host content that is designed to socially engineer unsuspecting users into surrendering private information used for identity theft. These servers are installed on compromised web servers or botnets, at times. Phishing Web sites mimic legitimate Web sites, often of a financial institution, in order to steal logins, passwords, and personal information. Attackers trick users into using the fake Web site by sending the intended victim an e-mail claiming to be a legitimate institution requesting the information for valid reasons, such as account verification. They may then use the stolen credentials to withdraw large amounts of money from the victim's account or commit other fraudulent acts. Most targeted brands are usually in the financial sector, including banks and online commerce sites." \
+	"Arbor Networks" "https://atlas.arbor.net/"
+
+update atlas_scans $[24 * 60] "$[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+	"https://atlas.arbor.net/summary/scans.csv" \
+	atlas_parser \
+	"attacks" "[ATLAS Scans](https://atlas.arbor.net/summary/scans) - Host scanning is a process whereby automated network sweeps are initiated in search of hosts running a particular service. This may be indicative of either legitimate host scanners (including network management systems and authorized vulnerability scanners) or an attacker (or automated malicious code, such as a worm) trying to enumerate potential hosts for subsequent compromise. Scans are often the prelude to an attack, and services scanned by attackers usually indicate known vulnerabilities for those services. Types of port scans include connect() scans, SYN scans, stealth scans, bounce scans, XMAS and Null scans. All reveal to the attacker which services on what hosts are listening for connections. Scans may be launched from compromised hosts, and their sources may be forged." \
+	"Arbor Networks" "https://atlas.arbor.net/"
+
+
+# -----------------------------------------------------------------------------
 # www.openbl.org
 
 update openbl $[4*60] 0 ipv4 ip \
@@ -4032,6 +4215,25 @@ update darklist_de $[24 * 60] 0 ipv4 both \
 	protection "inbound" \
 	services "ssh"
 
+
+# -----------------------------------------------------------------------------
+# botvrij.eu
+
+update botvrij_dst $[24 * 60] 0 ipv4 ip \
+	"http://www.botvrij.eu/data/ioclist.ip-dst.raw" \
+	remove_comments \
+	"attacks" \
+	"[botvrij.eu](http://www.botvrij.eu/) Indicators of Compromise (IOCS) about malicious destination IPs, gathered via open source information feeds (blog pages and PDF documents) and then consolidated into different datasets. To ensure the quality of the data all entries older than approx. 6 months are removed." \
+	"botvrij.eu" "http://www.botvrij.eu/" \
+	can_be_empty
+
+update botvrij_src $[24 * 60] 0 ipv4 ip \
+	"http://www.botvrij.eu/data/ioclist.ip-src.raw" \
+	remove_comments \
+	"attacks" \
+	"[botvrij.eu](http://www.botvrij.eu/) Indicators of Compromise (IOCS) about malicious source IPs, gathered via open source information feeds (blog pages and PDF documents) and then consolidated into different datasets. To ensure the quality of the data all entries older than approx. 6 months are removed." \
+	"botvrij.eu" "http://www.botvrij.eu/" \
+	can_be_empty
 
 # -----------------------------------------------------------------------------
 # cruzit.com
@@ -4185,7 +4387,7 @@ update blocklist_de_bots 15 0 ipv4 ip \
 	"http://lists.blocklist.de/lists/bots.txt" \
 	remove_comments \
 	"attacks" \
-	"[Blocklist.de](https://www.blocklist.de/) All IP addresses which have been reported within the last 48 hours as having run attacks on the RFI-Attacks, REG-Bots, IRC-Bots or BadBots (BadBots = he has posted a Spam-Comment on a open Forum or Wiki)." \
+	"[Blocklist.de](https://www.blocklist.de/) All IP addresses which have been reported within the last 48 hours as having run attacks on the RFI-Attacks, REG-Bots, IRC-Bots or BadBots (BadBots = it has posted a Spam-Comment on a open Forum or Wiki)." \
 	"Blocklist.de" "https://www.blocklist.de/"
 
 update blocklist_de_strongips 15 0 ipv4 ip \
@@ -4208,7 +4410,7 @@ update blocklist_de_bruteforce 15 0 ipv4 ip \
 	"http://lists.blocklist.de/lists/bruteforcelogin.txt" \
 	remove_comments \
 	"attacks" \
-	"[Blocklist.de](https://www.blocklist.de/) All IPs which attacks Joomlas, Wordpress and other Web-Logins with Brute-Force Logins." \
+	"[Blocklist.de](https://www.blocklist.de/) All IPs which attacks Joomla, Wordpress and other Web-Logins with Brute-Force Logins." \
 	"Blocklist.de" "https://www.blocklist.de/"
 
 
@@ -4269,6 +4471,13 @@ update feodo 30 0 ipv4 ip \
 	"Abuse.ch" "https://feodotracker.abuse.ch/" \
 	can_be_empty
 
+update feodo_badips 30 0 ipv4 ip \
+	"https://feodotracker.abuse.ch/blocklist/?download=badips" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Feodo tracker BadIPs](https://feodotracker.abuse.ch) The Feodo Tracker Feodo BadIP Blocklist only contains IP addresses (IPv4) used as C&C communication channel by the Feodo Trojan version B. These IP addresses are usually servers rented by cybercriminals directly and used for the exclusive purpose of hosting a Feodo C&C server. Hence you should expect no legit traffic to those IP addresses. The site highly recommends you to block/drop any traffic towards any Feodo C&C using the Feodo BadIP Blocklist. Please consider that this blocklist only contains IP addresses used by version B of the Feodo Trojan. C&C communication channels used by version A, version C and version D are not covered by this blocklist." \
+	"Abuse.ch" "https://feodotracker.abuse.ch/" \
+	can_be_empty
 
 # -----------------------------------------------------------------------------
 # SSLBL
@@ -4291,6 +4500,108 @@ update sslbl_aggressive 30 0 ipv4 ip \
 	"malware" \
 	"[Abuse.ch SSL Blacklist](https://sslbl.abuse.ch/) The aggressive version of the SSL IP Blacklist contains all IPs that SSLBL ever detected being associated with a malicious SSL certificate. Since IP addresses can be reused (e.g. when the customer changes), this blacklist may cause false positives. Hence I highly recommend you to use the standard version instead of the aggressive one." \
 	"Abuse.ch" "https://sslbl.abuse.ch/" \
+	can_be_empty
+
+
+# -----------------------------------------------------------------------------
+# ransomwaretracker.abuse.ch
+# by abuse.ch
+
+parse_ransomwaretracker_feed() {
+	$SED_CMD -e 's/^[[:space:]]*#.*//g' \
+		-e 's/"\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)"/\8/g' \
+		-e 's/|/\n/g'
+}
+
+parse_ransomwaretracker_online() {
+  $SED_CMD -n -e 's/^"\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)","\(online\)","\(.*\)","\(.*\)","\(.*\)","\(.*\)"$/\8/p' | \
+  	$SED_CMD -e '/^[[:space:]]*$/d' -e 's/|/\n/g'
+}
+
+update ransomware_feed 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/feeds/csv/" \
+	parse_ransomwaretracker_feed \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. The IPs in this list have been extracted from the tracker data feed." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+if [ -f "${BASE_DIR}/ransomware_feed.source" -a -f "${BASE_DIR}/ransomware_online.source" ]
+	then
+	# copy ransomware_feed.source
+	ransomware_online_downloader="copyfile"
+	ransomware_online_downloader_options="${BASE_DIR}/ransomware_feed.source"
+else
+	# ransomware_feed is not enabled
+	# ransomware_online is standalone
+	ransomware_online_downloader="geturl"
+	ransomware_online_downloader_options=""
+fi
+
+update ransomware_online 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/feeds/csv/" \
+	parse_ransomwaretracker_online \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. The IPs in this list have been extracted from the tracker data feed, filtering only online IPs." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	downloader "${ransomware_online_downloader}" \
+	downloader_options "${ransomware_online_downloader_options}" \
+	can_be_empty
+
+update ransomware_rw 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/RW_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list includes TC_PS_IPBL, LY_C2_IPBL, TL_C2_IPBL, TL_PS_IPBL and it is the recommended blocklist. It might not catch everything, but the false positive rate should be low. However, false positives are possible, especially with regards to RW_IPBL. IP addresses associated with Ransomware Payment Sites (*_PS_IPBL) or Locky botnet C&Cs (LY_C2_IPBL) stay listed on RW_IPBL for a time of 30 days after the last appearance. This means that an IP address stays listed on RW_IPBL even after the threat has been eliminated (e.g. the VPS / server has been suspended by the hosting provider) for another 30 days." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_cryptowall_ps 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/CW_PS_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is CW_PS_IPBL: CryptoWall Ransomware Payment Sites IP blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_teslacrypt_ps 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/TC_PS_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is TC_PS_IPBL: TeslaCrypt Ransomware Payment Sites IP blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_locky_c2 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/LY_C2_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is LY_C2_IPBL: Locky Ransomware C2 URL blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_locky_ps 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/LY_PS_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is LY_PS_IPBL: Locky Ransomware Payment Sites IP blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_torrentlocker_ps 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/TL_PS_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is TL_PS_IPBL: TorrentLocker Ransomware Payment Sites IP blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
+	can_be_empty
+
+update ransomware_torrentlocker_c2 5 0 ipv4 ip \
+	"https://ransomwaretracker.abuse.ch/downloads/TL_C2_IPBL.txt" \
+	remove_comments \
+	"malware" \
+	"[Abuse.ch Ransomware Tracker](https://ransomwaretracker.abuse.ch) Ransomware Tracker tracks and monitors the status of domain names, IP addresses and URLs that are associated with Ransomware, such as Botnet C&C servers, distribution sites and payment sites. By using data provided by Ransomware Tracker, hosting- and internet service provider (ISPs), as well as national CERTs/CSIRTs, law enforcement agencies (LEA) and security researchers can receive an overview on infrastructure used by Ransomware and whether these are actively being used by miscreants to commit fraud. This list is TL_C2_IPBL: TorrentLocker Ransomware C2 IP blocklist." \
+	"Abuse.ch" "https://ransomwaretracker.abuse.ch" \
 	can_be_empty
 
 
@@ -4318,6 +4629,17 @@ update malc0de $[24*60] 0 ipv4 ip \
 	"malware" \
 	"[Malc0de.com](http://malc0de.com) malicious IPs of the last 30 days" \
 	"malc0de.com" "http://malc0de.com/"
+
+# -----------------------------------------------------------------------------
+# Threat Crowd
+# http://threatcrowd.blogspot.gr/2016/02/crowdsourced-feeds-from-threatcrowd.html
+
+update threatcrowd 60 0 ipv4 ip \
+	"https://www.threatcrowd.org/feeds/ips.txt" \
+	remove_comments \
+	"malware" \
+	"[Crowdsourced IP feed from ThreatCrowd](http://threatcrowd.blogspot.gr/2016/02/crowdsourced-feeds-from-threatcrowd.html). These feeds are not a substitute for the scale of auto-extracted command and control domains or the quality of some commercially provided feeds. But crowd-sourcing does go some way towards the quick sharing of threat intelligence between the community." \
+	"Threat Crowd" "https://www.threatcrowd.org/"
 
 
 # -----------------------------------------------------------------------------
@@ -4444,7 +4766,7 @@ update myip $[24*60] 0 ipv4 ip \
 update bogons $[24*60] 0 ipv4 both \
 	"http://www.team-cymru.org/Services/Bogons/bogon-bn-agg.txt" \
 	remove_comments \
-	"unroutable" \
+	"unrouteable" \
 	"[Team-Cymru.org](http://www.team-cymru.org) private and reserved addresses defined by RFC 1918, RFC 5735, and RFC 6598 and netblocks that have not been allocated to a regional internet registry" \
 	"Team Cymru" "http://www.team-cymru.org/" \
 	dont_redistribute
@@ -4457,7 +4779,7 @@ update bogons $[24*60] 0 ipv4 both \
 update fullbogons $[24*60] 0 ipv4 both \
 	"http://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt" \
 	remove_comments \
-	"unroutable" \
+	"unrouteable" \
 	"[Team-Cymru.org](http://www.team-cymru.org) IP space that has been allocated to an RIR, but not assigned by that RIR to an actual ISP or other end-user" \
 	"Team Cymru" "http://www.team-cymru.org/" \
 	dont_redistribute
@@ -4465,7 +4787,7 @@ update fullbogons $[24*60] 0 ipv4 both \
 #update fullbogons6 $[24*60-10] ipv6 both \
 #	"http://www.team-cymru.org/Services/Bogons/fullbogons-ipv6.txt" \
 #	remove_comments \
-#	"unroutable" \
+#	"unrouteable" \
 #	"Team-Cymru.org provided" \
 #	"Team Cymru" "http://www.team-cymru.org/" \
 #	dont_redistribute
@@ -4476,7 +4798,7 @@ update fullbogons $[24*60] 0 ipv4 both \
 update cidr_report_bogons $[24*60] 0 ipv4 both \
 	"http://www.cidr-report.org/bogons/freespace-prefix.txt" \
 	remove_comments \
-	"unroutable" \
+	"unrouteable" \
 	"Unallocated (Free) Address Space, generated on a daily basis using the IANA registry files, the Regional Internet Registry stats files and the Regional Internet Registry whois data." \
 	"CIDR-Report.org" "http://www.cidr-report.org"
 
@@ -4689,14 +5011,71 @@ update alienvault_reputation $[6*60] 0 ipv4 ip \
 
 # -----------------------------------------------------------------------------
 # Clean-MX
-# Viruses
 
+# Viruses
 update cleanmx_viruses 30 0 ipv4 ip \
 	"http://support.clean-mx.de/clean-mx/xmlviruses.php?response=alive&fields=ip" \
 	parse_xml_clean_mx \
 	"spam" \
 	"[Clean-MX.de](http://support.clean-mx.de/clean-mx/viruses.php) IPs with viruses" \
 	"Clean-MX.de" "http://support.clean-mx.de/clean-mx/viruses.php"
+
+
+# Phishing
+parse_cvs_clean_mx_phishing() { $SED_CMD -e 's/|/_/g' -e 's/","/|/g' | $CUT_CMD -d '|' -f 10; }
+update cleanmx_phishing 30 0 ipv4 ip \
+	"http://support.clean-mx.de/clean-mx/xmlphishing?response=alive&format=csv&domain=" \
+	parse_cvs_clean_mx_phishing \
+	"spam" \
+	"[Clean-MX.de](http://support.clean-mx.de/) IPs sending phishing messages" \
+	"Clean-MX.de" "http://support.clean-mx.de/"
+
+
+# -----------------------------------------------------------------------------
+# DynDNS
+
+# Phishing
+parse_cvs_dyndns_ponmocup() { $SED_CMD -e 's/|/_/g' -e 's/","/|/g' | $CUT_CMD -d '|' -f 2; }
+update dyndns_ponmocup $[24 * 60] 0 ipv4 ip \
+	"http://security-research.dyndns.org/pub/malware-feeds/ponmocup-infected-domains-shadowserver.csv" \
+	parse_cvs_dyndns_ponmocup \
+	"malware" \
+	"[DynDNS.org](http://security-research.dyndns.org/pub/malware-feeds/) Ponmocup. The malware powering the botnet has been around since 2006 and it’s known under various names, including Ponmocup, Vundo, Virtumonde, Milicenso and Swisyn. It has been used for ad fraud, data theft and downloading additional threats to infected systems. Ponmocup is one of the largest currently active and, with nine consecutive years, also one of the longest running, but it is rarely noticed as the operators take care to keep it operating under the radar." \
+	"DynDNS.org" "http://security-research.dyndns.org/pub/malware-feeds/"
+
+
+# -----------------------------------------------------------------------------
+# Turris
+
+parse_turris_greylist() { $CUT_CMD -d ',' -f 1; }
+update turris_greylist $[7 * 24 * 60] 0 ipv4 ip \
+	"https://www.turris.cz/greylist-data/greylist-latest.csv" \
+	parse_turris_greylist \
+	"reputation" \
+	"[Turris Greylist](https://www.turris.cz/en/greylist) IPs that are blocked on the firewalls of Turris routers. The data is processed and clasified every week and behaviour of IP addresses that accessed a larger number of Turris routers is evaluated. The result is a list of addresses that have tried to obtain information about services on the router or tried to gain access to them. We do not recommend to use these data as a list of addresses that should be blocked but it can be used for example in analysis of the traffic in other networks." \
+	"Turris" "https://www.turris.cz/en/greylist"
+
+
+# -----------------------------------------------------------------------------
+# http://www.urlvir.com/
+
+update urlvir $[24 * 60] 0 ipv4 ip \
+	"http://www.urlvir.com/export-ip-addresses/" \
+	remove_comments \
+	"malware" \
+	"[URLVir.com](http://www.urlvir.com/) Active Malicious IP Addresses Hosting Malware. URLVir is an online security service developed by NoVirusThanks Company Srl that automatically monitors changes of malicious URLs (executable files)." \
+	"URLVir.com" "http://www.urlvir.com/"
+
+
+# -----------------------------------------------------------------------------
+# Taichung
+
+update taichung $[24 * 60] 0 ipv4 ip \
+	"https://www.tc.edu.tw/net/netflow/lkout/recent/30" \
+	extract_ipv4_from_any_file \
+	"attacks" \
+	"[Taichung Education Center](https://www.tc.edu.tw/net/netflow/lkout/recent/30) Blocked IP Addresses (attacks and bots)." \
+	"Taichung Education Center" "https://www.tc.edu.tw/net/netflow/lkout/recent/30"
 
 
 # -----------------------------------------------------------------------------
@@ -4857,7 +5236,7 @@ update virbl 60 0 ipv4 ip \
 	"http://virbl.bit.nl/download/virbl.dnsbl.bit.nl.txt" \
 	remove_comments \
 	"spam" \
-	"[VirBL](http://virbl.bit.nl/) is a project of which the idea was born during the RIPE-48 meeting. The plan was to get reports of virusscanning mailservers, and put the IP-addresses that were reported to send viruses on a blacklist." \
+	"[VirBL](http://virbl.bit.nl/) is a project of which the idea was born during the RIPE-48 meeting. The plan was to get reports of virus scanning mailservers, and put the IP-addresses that were reported to send viruses on a blacklist." \
 	"VirBL.bit.nl" "http://virbl.bit.nl/"
 
 
@@ -4908,6 +5287,37 @@ update lashback_ubl $[24*60] 0 ipv4 ip \
 	"spam" \
 	"[The LashBack UBL](http://blacklist.lashback.com/) The Unsubscribe Blacklist (UBL) is a real-time blacklist of IP addresses which are sending email to names harvested from suppression files (this is a big list, more than 500.000 IPs)" \
 	"The LashBack Unsubscribe Blacklist" "http://blacklist.lashback.com/"
+
+
+# -----------------------------------------------------------------------------
+# DataPlane.org
+# DataPlane.org is a community-powered Internet data, feeds and measurement resource for operators, by operators. We provide reliable and trustworthy service at no cost.
+
+dataplane_column3() { remove_comments | $CUT_CMD -d '|' -f 3 | trim; }
+
+update dataplane_sipquery 60 0 ipv4 ip \
+	"https://dataplane.org/sipquery.txt" \
+	dataplane_column3 \
+	"attacks" \
+	"[DataPlane.org](https://dataplane.org/) IP addresses that has been seen initiating a SIP OPTIONS query to a remote host. This report lists hosts that are suspicious of more than just port scanning. These hosts may be SIP server cataloging or conducting various forms of telephony abuse." \
+	"DataPlane.org" "https://dataplane.org/" \
+	dont_redistribute
+
+update dataplane_sshpwauth 60 0 ipv4 ip \
+	"https://dataplane.org/sshpwauth.txt" \
+	dataplane_column3 \
+	"attacks" \
+	"[DataPlane.org](https://dataplane.org/) IP addresses that has been seen attempting to remotely login to a host using SSH password authentication. This report lists hosts that are highly suspicious and are likely conducting malicious SSH password authentication attacks." \
+	"DataPlane.org" "https://dataplane.org/" \
+	dont_redistribute
+
+update dataplane_sshclient 60 0 ipv4 ip \
+	"https://dataplane.org/sshclient.txt" \
+	dataplane_column3 \
+	"attacks" \
+	"[DataPlane.org](https://dataplane.org/) IP addresses that has been seen initiating an SSH connection to a remote host. This report lists hosts that are suspicious of more than just port scanning.  These hosts may be SSH server cataloging or conducting authentication attack attempts." \
+	"DataPlane.org" "https://dataplane.org/" \
+	dont_redistribute
 
 # -----------------------------------------------------------------------------
 # Dragon Research Group (DRG)
@@ -5054,14 +5464,14 @@ update vxvault $[12 * 60] 0 ipv4 ip \
 update bitcoin_blockchain_info 10 "$[24*60] $[7*24*60] $[30*24*60]" ipv4 ip \
 	"https://blockchain.info/en/connected-nodes" \
 	extract_ipv4_from_any_file \
-	"reputation" \
+	"organizations" \
 	"[Blockchain.info](https://blockchain.info/en/connected-nodes) Bitcoin nodes connected to Blockchain.info." \
 	"Blockchain.info" "https://blockchain.info/en/connected-nodes"
 
 update bitcoin_nodes 10 "$[24*60] $[7*24*60] $[30*24*60]" ipv4 ip \
 	"https://getaddr.bitnodes.io/api/v1/snapshots/latest/" \
 	extract_ipv4_from_any_file \
-	"reputation" \
+	"organizations" \
 	"[BitNodes](https://getaddr.bitnodes.io/) Bitcoin connected nodes, globally." \
 	"BitNodes" "https://getaddr.bitnodes.io/"
 
@@ -5086,6 +5496,29 @@ update trustedsec_atif $[24*60] 0 ipv4 ip \
 	"reputation" \
 	"Artillery Threat Intelligence Feed and Banlist Feed" \
 	"TrustedSec" "https://www.trustedsec.com/"
+
+
+# -----------------------------------------------------------------------------
+# bbcan177
+
+update bbcan177_ms1 $[24*60] 0 ipv4 both \
+	"https://gist.githubusercontent.com/BBcan177/bf29d47ea04391cb3eb0/raw" \
+	remove_comments \
+	"malware" \
+	"pfBlockerNG Malicious Threats" \
+	"BBcan177" "https://gist.github.com/BBcan177"
+
+update bbcan177_ms3 $[24*60] 0 ipv4 both \
+	"https://gist.githubusercontent.com/BBcan177/d7105c242f17f4498f81/raw" \
+	remove_comments \
+	"malware" \
+	"pfBlockerNG Malicious Threats" \
+	"BBcan177" "https://gist.github.com/BBcan177"
+
+# -----------------------------------------------------------------------------
+# eSentire
+
+eSentire
 
 
 # -----------------------------------------------------------------------------
@@ -5181,7 +5614,7 @@ update graphiclineweb $[24*60] 0 ipv4 both \
 	"https://graphiclineweb.wordpress.com/tech-notes/ip-blacklist/" \
 	parse_graphiclineweb \
 	"abuse" \
-	"[GraphiclineWeb](https://graphiclineweb.wordpress.com/tech-notes/ip-blacklist/) The IP’s, Hosts and Domains listed in this table are banned universally from accessing websites controlled by the maintainer. Some form of bad activity has been seen from the addresses listed. Bad activity includes: unwanted spiders, rule breakers, comment spammers, trackback spammers, spambots, hacker bots, registration bots and other scripting attackers, harvesters, nuisance spiders, spy bots and organisations spying on websites for commercial reasons." \
+	"[GraphiclineWeb](https://graphiclineweb.wordpress.com/tech-notes/ip-blacklist/) The IP’s, Hosts and Domains listed in this table are banned universally from accessing websites controlled by the maintainer. Some form of bad activity has been seen from the addresses listed. Bad activity includes: unwanted spiders, rule breakers, comment spammers, trackback spammers, spambots, hacker bots, registration bots and other scripting attackers, harvesters, nuisance spiders, spy bots and organizations spying on websites for commercial reasons." \
 	"GraphiclineWeb" "https://graphiclineweb.wordpress.com/tech-notes/ip-blacklist/"
 
 
@@ -5401,7 +5834,7 @@ update iblocklist_spyware $[12*60] 0 ipv4 both \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
 
-update iblocklist_badpeers $[12*60] 0 ipv4 ip \
+update iblocklist_badpeers $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=cwworuawihqvocglcoss&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
 	"reputation" \
@@ -5412,14 +5845,14 @@ update iblocklist_badpeers $[12*60] 0 ipv4 ip \
 update iblocklist_hijacked $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=usrcshglbiilevmyfhse&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"reputation" \
+	"attacks" \
 	"Hijacked IP-Blocks. Contains hijacked IP-Blocks and known IP-Blocks that are used to deliver Spam. This list is a combination of lists with hijacked IP-Blocks. Hijacked IP space are IP blocks that are being used without permission by organizations that have no relation to original organization (or its legal successor) that received the IP block. In essence it's stealing of somebody else's IP resources." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
 
 update iblocklist_webexploit $[12*60] 0 ipv4 ip \
 	"http://list.iblocklist.com/?list=ghlzqtqxnzctvvajwwag&fileformat=p2p&archiveformat=gz" \
-	p2p_gz \
+	p2p_gz_ips \
 	"reputation" \
 	"Web server hack and exploit attempts. IP addresses related to current web server hack and exploit attempts that have been logged or can be found in and cross referenced with other related IP databases. Malicious and other non search engine bots will also be listed here, along with anything found that can have a negative impact on a website or webserver such as proxies being used for negative SEO hijacks, unauthorised site mirroring, harvesting, scraping, snooping and data mining / spy bot / security & copyright enforcement companies that target and continuosly scan webservers." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
@@ -5429,7 +5862,7 @@ update iblocklist_level1 $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=ydxerpxkpcfqjaybcssw&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
 	"reputation" \
-	"Level 1 (for use in p2p): Companies or organizations who are clearly involved with trying to stop filesharing (e.g. Baytsp, MediaDefender, Mediasentry a.o.). Companies which anti-p2p activity has been seen from. Companies that produce or have a strong financial interest in copyrighted material (e.g. music, movie, software industries a.o.). Government ranges or companies that have a strong financial interest in doing work for governments. Legal industry ranges. IPs or ranges of ISPs from which anti-p2p activity has been observed. Basically this list will block all kinds of internet connections that most people would rather not have during their internet travels." \
+	"Level 1 (for use in p2p): Companies or organizations who are clearly involved with trying to stop filesharing (e.g. Baytsp, MediaDefender, Mediasentry). Companies which anti-p2p activity has been seen from. Companies that produce or have a strong financial interest in copyrighted material (e.g. music, movie, software industries a.o.). Government ranges or companies that have a strong financial interest in doing work for governments. Legal industry ranges. IPs or ranges of ISPs from which anti-p2p activity has been observed. Basically this list will block all kinds of internet connections that most people would rather not have during their internet travels." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
 
@@ -5468,7 +5901,7 @@ update iblocklist_rangetest $[12*60] 0 ipv4 both \
 update iblocklist_bogons $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=gihxqmhyunbxhbmgqrla&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"unroutable" \
+	"unrouteable" \
 	"Unallocated address space." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5492,7 +5925,7 @@ update iblocklist_org_microsoft $[12*60] 0 ipv4 both \
 update iblocklist_spider $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=mcvxsnihddgutbjfbghy&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"organizations" \
+	"reputation" \
 	"IP list intended to be used by webmasters to block hostile spiders from their web sites." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5500,7 +5933,7 @@ update iblocklist_spider $[12*60] 0 ipv4 both \
 update iblocklist_dshield $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=xpbqleszmajjesnzddhv&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"reputation" \
+	"attacks" \
 	"known Hackers and such people." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5508,7 +5941,7 @@ update iblocklist_dshield $[12*60] 0 ipv4 both \
 update iblocklist_iana_reserved $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=bcoepfyewziejvcqyhqo&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"unroutable" \
+	"unrouteable" \
 	"IANA Reserved IPs." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5516,7 +5949,7 @@ update iblocklist_iana_reserved $[12*60] 0 ipv4 both \
 update iblocklist_iana_private $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=cslpybexmxyuacbyuvib&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"unroutable" \
+	"unrouteable" \
 	"IANA Private IPs." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5524,7 +5957,7 @@ update iblocklist_iana_private $[12*60] 0 ipv4 both \
 update iblocklist_iana_multicast $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=pwqnlynprfgtjbgqoizj&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"unroutable" \
+	"unrouteable" \
 	"IANA Multicast IPs." \
 	"iBlocklist.com" "https://www.iblocklist.com/" \
 	dont_redistribute
@@ -5577,7 +6010,7 @@ update iblocklist_yoyo_adservers $[12*60] 0 ipv4 both \
 update iblocklist_spamhaus_drop $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=zbdlwrqkabxbcppvrnos&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"reputation" \
+	"attacks" \
 	"Spamhaus.org DROP (Don't Route Or Peer) list." \
 	"iBlocklist.com" "https://www.iblocklist.com/"
 
@@ -5613,13 +6046,13 @@ update iblocklist_malc0de $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=pbqcylkejciyhmwttify&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
 	"malware" \
-	"malc0de.com IP blocklist. Addresses that have been indentified distributing malware during the past 30 days." \
+	"malc0de.com IP blocklist. Addresses that have been identified distributing malware during the past 30 days." \
 	"iBlocklist.com" "https://www.iblocklist.com/"
 
 update iblocklist_cidr_report_bogons $[12*60] 0 ipv4 both \
 	"http://list.iblocklist.com/?list=lujdnbasfaaixitgmxpp&fileformat=p2p&archiveformat=gz" \
 	p2p_gz \
-	"unroutable" \
+	"unrouteable" \
 	"cidr-report.org IP list of Unallocated address space." \
 	"iBlocklist.com" "https://www.iblocklist.com/"
 
@@ -5841,17 +6274,59 @@ update iblocklist_isp_sprint $[24*60] 0 ipv4 both \
 	"iBlocklist.com" "https://www.iblocklist.com/"
 
 # -----------------------------------------------------------------------------
+# https://blocklist.sigmaprojects.org/
+
+update sp_atma $[24*60] 0 ipv4 both \
+	"https://blocklist.sigmaprojects.org/api.cfc?method=getList&lists=atma" \
+	${ZCAT_CMD} \
+	"attacks" \
+	"Attackers who try to spy or remotely control others' computers by means such as Microsoft remote terminal, SSH, Telnet or shared desktops. Threats for email servers or users: spiders/bots, account hijacking, etc. Sites spreading virus, trojans, spyware, etc. or just being used by them to let their authors know that a new computer has been infected. Threats for servers: exploits, fake identities/agents, DDoS attackers, etc. Port scans, which are the first step towards more dangerous actions. Malicious P2P sharers or bad peers who spread malware, inject bad traffic or share fake archives. (The site states they re-distribute this IP List from iblocklist.com)." \
+	"SigmaProjects.org" "https://blocklist.sigmaprojects.org/"
+
+update sp_anti_infringement $[24*60] 0 ipv4 both \
+	"https://blocklist.sigmaprojects.org/api.cfc?method=getList&lists=anti-infringement" \
+	${ZCAT_CMD} \
+	"organizations" \
+	"IPs of Anti-Infringement organizations. (The site states they re-distribute this IP List from iblocklist.com)" \
+	"SigmaProjects.org" "https://blocklist.sigmaprojects.org/"
+
+update sp_spammers $[24*60] 0 ipv4 both \
+	"https://blocklist.sigmaprojects.org/api.cfc?method=getList&lists=spammers" \
+	${ZCAT_CMD} \
+	"spam" \
+	"Spammers. (The site states they re-distribute this IP List from iblocklist.com)" \
+	"SigmaProjects.org" "https://blocklist.sigmaprojects.org/"
+
+
+# -----------------------------------------------------------------------------
+# https://www.gpf-comics.com/dnsbl/export.php
+
+update gpf_comics $[24*60] 0 ipv4 ip \
+	"https://www.gpf-comics.com/dnsbl/export.php" \
+	remove_comments \
+	"abuse" \
+	"The GPF DNS Block List is a list of IP addresses on the Internet that have attacked the [GPF Comics](http://www.gpf-comics.com/) family of Web sites. IPs on this block list have been banned from accessing all of our servers because they were caught in the act of spamming, attempting to exploit our scripts, scanning for vulnerabilities, or consuming resources to the detriment of our human visitors." \
+	"GPF Comics" "https://www.gpf-comics.com/dnsbl/" \
+	downloader_options "--data 'ipv6=0&export_type=text&submit=Export'"
+
+
+# -----------------------------------------------------------------------------
 # BadIPs.com
 
 badipscom() {
 	local ret=
 
 	ipset_shall_be_run "badips"
-	if [ $? -ne 0 ]
-		then
-		[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/badips.setinfo" "badips.com categories ipsets|[BadIPs.com](https://www.badips.com) community based IP blacklisting. They score IPs based on the reports they reports.|ipv4 hash:ip|disabled|disabled"
-		return 1
-	fi
+	case "$?" in
+		0)	;;
+
+		1)	[ -d "${BASE_DIR}/.git" ] && echo >"${BASE_DIR}/badips.setinfo" "badips.com categories ipsets|[BadIPs.com](https://www.badips.com) community based IP blacklisting. They score IPs based on the reports they reports.|ipv4 hash:ip|disabled|disabled"
+			return 1
+			;;
+
+		*)	return 1
+			;;
+	esac
 
 	if [ ${ENABLE_ALL} -eq 1 ]
 		then
@@ -5973,6 +6448,128 @@ badipscom() {
 badipscom
 
 # -----------------------------------------------------------------------------
+# blueliv
+
+blueliv_parser() {
+	if [ -z "${JQ_CMD}" ]
+	then
+		error "command 'jq' is not installed"
+		return 1
+	fi
+
+	${JQ_CMD} '[.crimeServers[] | {ip:.ip}]' | ${GREP_CMD} '"ip":' |\
+		${CUT_CMD} -d ':' -f 2 |\
+		${CUT_CMD} -d '"' -f 2 |\
+		${GREP_CMD} -v null
+}
+
+# check if it is enabled
+if [ -z "${BLUELIV_API_KEY}" ]
+	then
+	for x in blueliv_crimeserver_online blueliv_crimeserver_recent blueliv_crimeserver_last
+	do
+		if [ -f "${BASE_DIR}/${x}.source" ]
+			then
+			ipset_error ${x} "Please set BLUELIV_API_KEY='...' in ${CONFIG_FILE}"
+		else
+			ipset_disabled ${x}
+		fi
+	done
+else
+	update blueliv_crimeserver_online $[24 * 60] 0 ipv4 ip \
+		"https://freeapi.blueliv.com/v1/crimeserver/online" \
+		blueliv_parser \
+		"attacks" "[blueliv.com](https://www.blueliv.com/) Online Cybercrime IPs, in all categories: BACKDOOR, C_AND_C, EXPLOIT_KIT, MALWARE and PHISHING (to download the source data you need an API key from blueliv.com)" \
+		"blueliv.com" "https://www.blueliv.com/" \
+		dont_redistribute \
+		dont_enable_with_all \
+		downloader_options "-H 'Authorization: bearer ${BLUELIV_API_KEY}'"
+
+	update blueliv_crimeserver_recent $[24 * 60] 0 ipv4 ip \
+		"https://freeapi.blueliv.com/v1/crimeserver/recent" \
+		blueliv_parser \
+		"attacks" "[blueliv.com](https://www.blueliv.com/) Recent Cybercrime IPs, in all categories: BACKDOOR, C_AND_C, EXPLOIT_KIT, MALWARE and PHISHING (to download the source data you need an API key from blueliv.com)" \
+		"blueliv.com" "https://www.blueliv.com/" \
+		dont_redistribute \
+		dont_enable_with_all \
+		downloader_options "-H 'Authorization: bearer ${BLUELIV_API_KEY}'"
+
+	update blueliv_crimeserver_last $[6 * 60] "$[24*60] $[48*60] $[7*24*60] $[30*24*60]" ipv4 ip \
+		"https://freeapi.blueliv.com/v1/crimeserver/last" \
+		blueliv_parser \
+		"attacks" "[blueliv.com](https://www.blueliv.com/) Last 6 hours Cybercrime IPs, in all categories: BACKDOOR, C_AND_C, EXPLOIT_KIT, MALWARE and PHISHING (to download the source data you need an API key from blueliv.com)" \
+		"blueliv.com" "https://www.blueliv.com/" \
+		dont_redistribute \
+		dont_enable_with_all \
+		downloader_options "-H 'Authorization: bearer ${BLUELIV_API_KEY}'"
+fi
+
+# -----------------------------------------------------------------------------
+# IBM X-Force
+# unfortunately a paid service
+
+$CAT_CMD >/dev/null <<"XFORCE_COMMENTED"
+declare -A xforce=(
+	[spam]="Spam"
+	[anonymous]="Anonymisation Services"
+	[scanners]="Scanning IPs"
+	[dynamic]="Dynamic IPs"
+	[malware]="Malware"
+	[bots]="Bots"
+	[c2]="Botnet Command and Control Server"
+)
+
+declare -A xforce_categories=(
+	[spam]="spam"
+	[anonymous]="anonymizers"
+	[scanners]="reputation"
+	[dynamic]="reputation"
+	[malware]="malware"
+	[bots]="malware"
+	[c2]="malware"
+)
+
+declare -a xforce_days=(1 2 7 30)
+
+xforce_parser() {
+	echo >&2 "ERROR: xforce is not implemented yet."
+	return 1
+}
+
+if [ ! -z "${XFORCE_API_KEY}" -a ! -z "${XFORCE_API_PASSWORD}" ]
+	then
+	for x in "${!xforce[@]}"
+	do
+		for d in "${xforce_days[@]}"
+		do
+			if [ -f "${BASE_DIR}/${x}_${d}d.source" ]
+				then
+				ipset_error ${x}_${d}d "Please set XFORCE_API_KEY='...' and XFORCE_API_PASSWORD='...' in ${CONFIG_FILE}"
+			else
+				ipset_disabled ${x}_${d}d
+			fi
+		done
+	done
+else
+	now=$($DATE_CMD +%s)
+	for x in "${!xforce[@]}"
+	do
+		for d in "${xforce_days[@]}"
+		do
+			update ${x}_${d}d $[60] "" ipv4 ip \
+				"https://api.xforce.ibmcloud.com/ipr?category=$(echo "${xforce[${x}]}" | $SED_CMD "s| |%20|g")&startDate=$($DATE_CMD +"%Y-%m-%dT%H%%3A%M%%3A%SZ&limit=10000" --date=@$(( now - (d * 86400) )))" \
+				xforce_parser \
+				"${xforce_categories[${x}]}" "[IBM X-Force Exchange](https://exchange.xforce.ibmcloud.com/) - ${xforce[${x}]} detected in the last ${d} day(s)." \
+				"IBM X-Force Exchange" "https://exchange.xforce.ibmcloud.com/" \
+				dont_redistribute \
+				dont_enable_with_all \
+				downloader_options "-H 'Accept: application/json' -u '${XFORCE_API_KEY}:${XFORCE_API_PASSWORD}'"
+		done
+	done
+fi
+XFORCE_COMMENTED
+
+# -----------------------------------------------------------------------------
 # SORBS test
 
 # this is a test - it does not work without another script that rsyncs files from sorbs.net
@@ -6085,7 +6682,7 @@ update sorbs_escalations 1 0 ipv4 both "" \
 update sorbs_noserver 1 0 ipv4 both "" \
 	$CAT_CMD \
 	"spam" \
-	"[Sorbs.net](https://www.sorbs.net/) IP addresses and Netblocks of where system administrators and ISPs owning the network have indicated that servers should not be present." \
+	"[Sorbs.net](https://www.sorbs.net/) IP addresses and netblocks of where system administrators and ISPs owning the network have indicated that servers should not be present." \
 	"Sorbs.net" "https://www.sorbs.net/" \
 	dont_redistribute \
 	dont_enable_with_all
@@ -6183,7 +6780,6 @@ merge firehol_level1 ipv4 both \
 	"A firewall blacklist composed from IP lists, providing maximum protection with minimum false positives. Suitable for basic protection on all internet facing servers, routers and firewalls." \
 	"FireHOL" "http://iplists.firehol.org/" \
 	bambenek_c2 \
-	cta_cryptowall \
 	dshield \
 	feodo \
 	fullbogons \
@@ -6192,6 +6788,7 @@ merge firehol_level1 ipv4 both \
 	spamhaus_edrop \
 	sslbl \
 	zeus_badips \
+	ransomware_rw \
 
 merge firehol_level2 ipv4 both \
 	"attacks" \
@@ -6270,7 +6867,7 @@ merge firehol_abusers_30d ipv4 both \
 
 merge firehol_webserver ipv4 both \
 	"attacks" \
-	"A web server IP blacklist made from blocklists that track IPs that should never be your web users. (This list includes IPs that are servers hosting malware, bots, etc or users having a long criminal history. This list is to be used on top of firehol_level1, firehol_level2, firehol_level3 and possibly firehol_proxies or firehol_anonymous)." \
+	"A web server IP blacklist made from blocklists that track IPs that should never be used by your web users. (This list includes IPs that are servers hosting malware, bots, etc or users having a long criminal history. This list is to be used on top of firehol_level1, firehol_level2, firehol_level3 and possibly firehol_proxies or firehol_anonymous)." \
 	"FireHOL" "http://iplists.firehol.org/" \
 	hphosts_emd \
 	hphosts_exp \
@@ -6308,11 +6905,25 @@ merge firehol_anonymous ipv4 both \
 	firehol_proxies \
 	tor_exits \
 
+merge firehol_webclient ipv4 both \
+	"malware" \
+	"An IP blacklist made from blocklists that track IPs that a web client should never talk to. This list is to be used on top of firehol_level1." \
+	"FireHOL" "http://iplists.firehol.org/" \
+	ransomware_online \
+	sslbl_aggressive \
+	cybercrime \
+	atlas_phishing_2d \
+	atlas_fastflux_2d \
+	dyndns_ponmocup \
+	maxmind_proxy_fraud \
+
 
 # -----------------------------------------------------------------------------
 # TODO
 #
 # add sets
+# - https://github.com/certtools/intelmq/blob/master/intelmq/bots/BOTS
+#
 # - http://security-research.dyndns.org/pub/botnet/ponmocup/ponmocup-finder/ponmocup-infected-domains-latest.txt - sent email to toms.security.stuff@gmail.com
 # - http://jeroen.steeman.org/FS-PlainText - sent email to jeroen@steeman.org
 
@@ -6320,12 +6931,6 @@ merge firehol_anonymous ipv4 both \
 # - http://www.cidr-report.org/bogons/freespace-prefix6.txt
 # - https://github.com/mlsecproject/combine/issues/25
 #
-# - https://github.com/Blueliv/api-python-sdk/wiki/Blueliv-REST-API-Documentation
-# - https://atlas.arbor.net/summary/attacks.csv
-# - https://atlas.arbor.net/summary/botnets.csv
-# - https://atlas.arbor.net/summary/fastflux.csv
-# - https://atlas.arbor.net/summary/phishing.csv
-# - https://atlas.arbor.net/summary/scans.csv
 # - spam: http://www.reputationauthority.org/toptens.php
 # - spam: https://www.juniper.net/security/auto/spam/
 # - spam: http://toastedspam.com/deny
@@ -6377,9 +6982,9 @@ do
 
 		if [ $? -ne 0 ]
 			then
-			error "'${supplied_ipset_file}' failed"
+			error "run of '${supplied_ipset_file}' reports failure"
 		else
-			verbose "'${supplied_ipset_file}' completed"
+			verbose "run of '${supplied_ipset_file}' completed"
 		fi
 	done
 done
