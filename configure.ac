@@ -5,7 +5,7 @@ AC_PREREQ([2.63])
 dnl Package version
 define([VERSION_MAJOR], [3])
 define([VERSION_MINOR], [0])
-define([VERSION_FIX], [1])
+define([VERSION_FIX], [2])
 define([VERSION_SUFFIX], [])
 
 dnl Required program versions
@@ -28,6 +28,8 @@ AM_MAINTAINER_MODE([disable])
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
+
+AM_CONDITIONAL([GIT_TREE], [test -f README.md])
 
 AX_FIREHOL_AUTOSAVE()
 AX_FIREHOL_AUTOSAVE6()
@@ -136,6 +138,10 @@ AX_CHECK_MINVER([BASH_VERSION_PATH], MIN_BASH_VERSION, [$BASH_SHELL_PATH],
                 [], [AC_MSG_ERROR(could not find required version of bash)])
 AX_NEED_SED()
 
+if test x"$enable_ipv6" = xyes; then
+AX_CHECK_PING_IPV6()
+fi
+
 dnl --- OUTPUT OF './packaging/firehol/gen-config-detect sbin/*.in' BEGIN   ---
 if test x"$MAKEDIST_BUILD_ONLY" != xyes; then
 AX_NEED_EGREP()
@@ -203,6 +209,7 @@ AX_NEED_PROG([TR], [tr], [])
 AX_NEED_PROG([UNAME], [uname], [])
 AX_NEED_PROG([UNIQ], [uniq], [])
 AX_NEED_PROG([WC], [wc], [])
+AX_CHECK_PROG([ZCAT], [zcat], [])
 AX_CHECK_PROG([ZCAT], [gzcat], [])
 AX_CHECK_PROG([ZCAT], [gzip], [-dc])
 fi
@@ -282,6 +289,7 @@ AX_NEED_PROG([FIND], [find], [])
 AX_NEED_PROG([FLOCK], [flock], [])
 AX_NEED_PROG([FOLD], [fold], [])
 AX_CHECK_PROG([FUNZIP], [funzip], [])
+AX_CHECK_PROG([JQ], [jq], [])
 AX_CHECK_PROG([GAWK], [gawk], [])
 AX_NEED_PROG([GAWK], [awk], [])
 AX_CHECK_PROG([GIT], [git], [])
@@ -303,6 +311,7 @@ AX_CHECK_PROG([TPUT], [tput], [])
 AX_NEED_PROG([TR], [tr], [])
 AX_CHECK_PROG([UNZIP], [unzip], [])
 AX_NEED_PROG([WC], [wc], [])
+AX_CHECK_PROG([ZCAT], [zcat], [])
 AX_CHECK_PROG([ZCAT], [gzcat], [])
 AX_NEED_PROG([ZCAT], [gzip], [-dc])
 fi

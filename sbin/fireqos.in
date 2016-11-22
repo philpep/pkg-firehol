@@ -25,7 +25,7 @@
 #       See the file COPYING for details.
 #
 
-VERSION='$Id: 12df87fd2b681fb98cdd0aa804ae3ac22b8adbd8 $'
+VERSION='$Id: 256a792134dd7c2cfb8ad0f2fb68106cb662352c $'
 PROGRAM_FILE="${0}"
 PROGRAM_DIR="${0%/*}"
 if [ "$PROGRAM_DIR" = "$0" ]; then PROGRAM_DIR="."; fi
@@ -810,7 +810,9 @@ parse_class_params() {
 		prio= qdisc= qdisc_options= minrate= rate= ceil= r2q= \
 		burst= cburst= quantum= mtu= mpu= tsize= param= value= \
 		linklayer= linklayer_type= linklayer_encoding= overhead= diff= \
-		valid_options="$interface_inout" current_options="$interface_inout"
+		valid_options="$interface_inout" current_options="$interface_inout" \
+		hashfilter=0 hashfilter_prefix= hashfilter_direction= hashfilter_key= \
+		hashfilter_mask=
 	shift 2
 
 	eval local base_rate="\$${parent}_rate"
@@ -1011,6 +1013,29 @@ parse_class_params() {
 					shift
 					;;
 
+			hashfilter)
+					if [ -z "${2}" ] || [ -z "${3}" ]
+					then
+					   error "Hashing filter requires additional parameters!"
+					   return 1
+					fi
+					hashfilter=1
+					if [ "${2}" == "key" ]
+					then
+						hashfilter_key="$3"
+						shift 2
+					else
+						if [ -z "${4}" ]
+						then
+							error "Hashing filter requires additional parameters!"
+						fi
+						hashfilter_direction="$2"
+						hashfilter_prefix="$3"
+						hashfilter_mask="$4"
+						shift 3
+					fi
+					;;
+
 			*)		error "Cannot understand what '${1}' means."
 					return 1
 					;;
@@ -1034,7 +1059,7 @@ parse_class_params() {
 	done
 
 	# no inheritance for these parameters
-	for param in rate mtu mpu tsize overhead linklayer linklayer_type linklayer_encoding r2q prio minrate
+	for param in rate mtu mpu tsize overhead linklayer linklayer_type linklayer_encoding r2q prio minrate hashfilter hashfilter_direction hashfilter_prefix hashfilter_key hashfilter_mask
 	do
 		eval export ${prefix}_${param}="\$$param"
 	done
@@ -1853,6 +1878,49 @@ class() {
 		class_rate=${interface_minrate}
 	fi
 
+	if [ ${class_hashfilter} -eq 1 ]
+	then
+		if [ ${class_group} -eq 0 ]
+		then
+			( [ ! -z "${class_hashfilter_prefix}" ] || [ ! -z "${class_hashfilter_direction}" ] || [ ! -z "${class_hashfilter_mask}" ] ) && error "Class group '${class_name}' has hashfilter group parameters set, but class is not definied as a group!"
+			if ! [[ "${class_hashfilter_key}" =~ ^[[:digit:]]{1,3}$ ]]
+			then
+				error "Class group '${class_name}' has hashfilter key parameter set in incorrect notation!"
+			fi
+         class_hashfilter_key=$(printf '%x' ${class_hashfilter_key})
+		else
+			[ ! -z "${class_hashfilter_key}" ]  && error "Class group '${class_name}' has hashfilter key parameters set, but class is definied as a group!"
+
+			if ! [[ "${class_hashfilter_prefix}" =~ ^([[:graph:]]+)/([[:graph:]]+)$ ]]
+			then
+				error "hashfilter prefix parameter for class '${class_name}' is in incorrect notation!"
+			fi
+			class_hashfilter_prefix_network=${BASH_REMATCH[1]}
+			class_hashfilter_prefix_mask=${BASH_REMATCH[2]}
+			if ! [[ "${class_hashfilter_prefix_network}" =~ ^[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$ ]]
+			then
+				error "Hashfilter prefix parameter for class '${class_name}' has an invalid network address!"
+			fi
+			if ! [[ "${class_hashfilter_prefix_mask}" =~ ^[[:digit:]]+$ ]] &&
+				! [[ "${class_hashfilter_prefix_mask}" =~ ^[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$ ]]
+			then
+				error "Hashfilter prefix parameter for class '${class_name}' has an invalid network mask!"
+			fi
+			if [[ "${class_hashfilter_prefix_mask}" =~ ^[[:digit:]]+$ ]]
+			then
+				class_hashfilter_prefix_mask=$(cidr_length_to_mask ${class_hashfilter_prefix_mask})
+				if ! [[ "${class_hashfilter_prefix_mask}" =~ ^[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$ ]]
+				then
+					error "Hashfilter prefix parameter for class '${class_name}' has an incorrect mask defined!"
+				fi
+			fi
+			if [ "${class_hashfilter_direction}" != "src" ] && [ "${class_hashfilter_direction}" != "dst" ]
+			then
+				error "Hashfilter direction parameter for class '${class_name}' is neither 'src' nor 'dst'!"
+			fi
+	   fi
+   fi
+
 	# class rate cannot go bellow 1/100 of the interface rate
 	if [ ${class_rate} -lt ${interface_minrate} ]
 	then
@@ -1958,6 +2026,15 @@ class() {
 		# so we add the filters and when we encounter the next class, we push it into the parents' stack, so that it becomes
 		# the parent for all classes following, until we encounter its matching 'class group end'.
 
+		if [ ${class_hashfilter} -eq 1 ]
+		then
+			local mask_hex="$(ip_to_hex ${class_hashfilter_mask})"
+			[ "${class_hashfilter_direction}" == "src" ] && local hashkey_pos=12
+			[ "${class_hashfilter_direction}" == "dst" ] && local hashkey_pos=16
+			[[ "${mask_hex}" =~ ^[[:alnum:]]{8}$ ]] || error "Unable to convert ${class_hashfilter_mask} to hex!"
+			tc filter add dev ${interface_realdev} parent 1:0 protocol all prio 2 handle 10: u32 divisor 256
+			tc filter add dev ${interface_realdev} parent 1:0 protocol all prio 2 u32 ht 800:: match ip ${class_hashfilter_direction} ${class_hashfilter_prefix_network}/${class_hashfilter_prefix_mask} hashkey mask 0x${mask_hex} at ${hashkey_pos} link 10:
+		fi
 	else
 		# this is a leaf class (no child classes possible)
 
@@ -2032,8 +2109,14 @@ class_${ncid}_qdisc_stab="${stab}"
 class_${ncid}_qdisc_options="${qdisc_options}"
 class_${ncid}_qdisc_command="${qdisc_command}"
 class_${ncid}_group="${class_group}"
+class_${ncid}_hashfilter="${class_hashfilter}"
+class_${ncid}_hashfilter_direction="${class_hashfilter_direction}"
+class_${ncid}_hashfilter_prefix="${class_hashfilter_prefix}"
+class_${ncid}_hashfilter_prefix_network="${class_hashfilter_prefix_network}"
+class_${ncid}_hashfilter_prefix_mask="${class_hashfilter_prefix_mask}"
+class_${ncid}_hashfilter_mask="${class_hashfilter_mask}"
+class_${ncid}_hashfilter_key="${class_hashfilter_key}"
 EOF
-
 	return 0
 }
 
@@ -2138,7 +2221,7 @@ match() {
 		srcmac=any dstmac=any class=${class_name} flowid=${class_filters_flowid} \
 		ack=0 syn=0 at= custom= tcproto= ipv4=${class_ipv4} ipv6=${class_ipv6} \
 		reverse=0 estimator_interval= estimator_decay= police_arg= \
-		prio= limit_rate= t= insidegre=0
+		prio= limit_rate= t= insidegre=0 hashtable=
 
 	case "${force_ipv}" in
 		4)
@@ -2203,7 +2286,7 @@ match() {
 				shift
 				;;
 
-         dscp)
+			dscp)
 				dscp="${2//,/ }"
 				shift
 				;;
@@ -2357,17 +2440,17 @@ match() {
 	sport="$(expand_ports ${sport})"
 	dport="$(expand_ports ${dport})"
 
-	[ -z "${proto}" ]	&& error "Cannot accept empty protocol."		&& return 1
-	[ -z "${port}" ]	&& error "Cannot accept empty ports."			&& return 1
+	[ -z "${proto}" ]	&& error "Cannot accept empty protocol."			&& return 1
+	[ -z "${port}" ]	&& error "Cannot accept empty ports."				&& return 1
 	[ -z "${sport}" ]	&& error "Cannot accept empty source ports."		&& return 1
 	[ -z "${dport}" ]	&& error "Cannot accept empty destination ports."	&& return 1
-	[ -z "${src}" ]		&& error "Cannot accept empty source IPs."		&& return 1
+	[ -z "${src}" ]		&& error "Cannot accept empty source IPs."			&& return 1
 	[ -z "${dst}" ]		&& error "Cannot accept empty destination IPs."		&& return 1
-	[ -z "${ip}" ]		&& error "Cannot accept empty IPs."			&& return 1
-	[ -z "${tos}" ]		&& error "Cannot accept empty TOS."			&& return 1
-	[ -z "${dscp}" ]		&& error "Cannot accept empty DSCP."			&& return 1
-	[ -z "${mark}" ]	&& error "Cannot accept empty MARK."			&& return 1
-	[ -z "${srcmac}" ] 	&& error "Cannot accept empty source MAC."		&& return 1
+	[ -z "${ip}" ]		&& error "Cannot accept empty IPs."					&& return 1
+	[ -z "${tos}" ]		&& error "Cannot accept empty TOS."					&& return 1
+	[ -z "${dscp}" ]	&& error "Cannot accept empty DSCP."				&& return 1
+	[ -z "${mark}" ]	&& error "Cannot accept empty MARK."				&& return 1
+	[ -z "${srcmac}" ] 	&& error "Cannot accept empty source MAC."			&& return 1
 	[ -z "${dstmac}" ] 	&& error "Cannot accept empty destination MAC."		&& return 1
 
 	[ ! "${port}" = "any" -a ! "${sport}" = "any" ]	&& error "Cannot match 'port' and 'sport'." && exit 1
@@ -2835,7 +2918,7 @@ match() {
 				tos_value="0x38"
 				tos_mask="0x38"
 				;;
-         AF21)
+			AF21)
 				tos_value="0x48"
 				tos_mask="0x48"
 				;;
@@ -2847,7 +2930,7 @@ match() {
 				tos_value="0x58"
 				tos_mask="0x58"
 				;;
-         AF31)
+			AF31)
 				tos_value="0x68"
 				tos_mask="0x68"
 				;;
@@ -2859,7 +2942,7 @@ match() {
 				tos_value="0x78"
 				tos_mask="0x78"
 				;;
-         AF41)
+			AF41)
 				tos_value="0x88"
 				tos_mask="0x88"
 				;;
@@ -2871,7 +2954,7 @@ match() {
 				tos_value="0x98"
 				tos_mask="0x98"
 				;;
-         EF)
+			EF)
 				tos_value="0xB8"
 				tos_mask="0xB8"
 				;;
@@ -2961,11 +3044,31 @@ match() {
 		police="police ${police_arg}"
 	fi
 
+	if [ ${class_hashfilter} -eq 1 ]
+	then
+		parent="1:0"
+		hashtable="ht 10:${class_hashfilter_key}"
+		u32="u32 ${hashtable}"
+	fi
+
 	tc filter add \
-		dev ${device} parent ${parent} protocol ${tcproto_arg} prio ${prio} \
+		dev ${device} \
+		parent ${parent} \
+		protocol ${tcproto_arg} \
+		prio ${prio} \
 		${estimator} \
 		${u32} \
-		${proto_arg} ${ip_arg} ${src_arg} ${dst_arg} ${port_arg} ${sport_arg} ${dport_arg} ${tos_arg} ${ack_arg} ${syn_arg} ${mark_arg} \
+		${proto_arg} \
+		${ip_arg} \
+		${src_arg} \
+		${dst_arg} \
+		${port_arg} \
+		${sport_arg} \
+		${dport_arg} \
+		${tos_arg} \
+		${ack_arg} \
+		${syn_arg} \
+		${mark_arg} \
 		${smac_arg} \
 		${dmac_arg} \
 		${custom} \
@@ -2989,6 +3092,121 @@ match() {
 	(( prio += 1 ))
 
 	done # tcproto (ipv4, ipv6)
+
+	return 0
+}
+
+ematch4() { ipv4 ematch "${@}"; }
+ematch6() { ipv6 ematch "${@}"; }
+ematch46() { ipv46 ematch "${@}"; }
+ematch() {
+	[ ${FIREQOS_DEBUG_FLOW} -eq 1 ] && echo >&2 " >> ${FUNCNAME} ${@}"
+
+	(( match_count += 1 ))
+
+	if [ "z${1}" = "z-ns" ]
+	then
+		shift
+	else
+		[ ${interface_save} -eq 1 ] && save ${FUNCNAME} "$@"
+	fi
+
+	[ ${FIREQOS_DEBUG} -eq 1 -o ${FIREQOS_SHOW_MATCHES} -eq 1 ] && echo >&2 -e "${COLOR_GREEN}:		${FUNCNAME} $*${COLOR_RESET}"
+
+	local 	class=${class_name} flowid=${class_filters_flowid} \
+		ipv4=${class_ipv4} ipv6=${class_ipv6} \
+
+	case "${force_ipv}" in
+		4)
+			ipv4=1
+			ipv6=0
+			;;
+
+		6)
+			ipv4=0
+			ipv6=1
+			;;
+
+		46)
+			ipv4=1
+			ipv6=1
+			;;
+	esac
+
+	if [ -z "${prio}" ]
+	then
+		prio=$((class_matchid * FIREQOS_MATCHES_STEP))
+		(( class_matchid += 1 ))
+	fi
+
+	local device=${interface_realdev}
+	local parent="${parent_filters_to}"
+	if [ -z "${flowid}" ]
+	then
+		error "Please set 'flowid' for match statements above all classes."
+		exit 1
+	elif [ ! "${class}" = "${class_name}" ]
+	then
+		local c=
+		for c in ${interface_classes}
+		do
+			local cn="`echo $c | ${CUT_CMD} -d '|' -f 1`"
+			local cf="`echo $c | ${CUT_CMD} -d '|' -f 2`"
+
+			if [ "${class}" = "${cn}" ]
+			then
+				local flowid=${cf}
+				break
+			fi
+		done
+
+		if [ -z "${flowid}" ]
+		then
+			error "Cannot find class '${class}'"
+			exit 1
+		fi
+	fi
+
+	if [ ! -z "${at}" ]
+	then
+		case "${at}" in
+			root)
+				local parent="${interface_filters_to}"
+				;;
+
+			*)
+				local c=
+				for c in ${interface_classes}
+				do
+					local cn="`echo $c | ${CUT_CMD} -d '|' -f 1`"
+					local cf="`echo $c | ${CUT_CMD} -d '|' -f 2`"
+
+					if [ "${class}" = "${cn}" ]
+					then
+						local parent=${cf}
+						break
+					fi
+				done
+
+				if [ -z "${parent}" ]
+				then
+					error "Cannot find class '${class}'"
+					exit 1
+				fi
+				;;
+		esac
+	fi
+
+	tc filter add \
+		dev ${device} \
+		parent ${parent} \
+		prio ${prio} \
+		basic match "${@}" \
+		flowid ${flowid} \
+		${police}
+
+	# increase the counter between tc protocols
+	(( prio += 1 ))
 
 	return 0
 }
@@ -3131,60 +3349,29 @@ ip_to_hex () {
 	echo ${hex}
 }
 
-cidr_length_to_mask () {
-	if [ -z "${1}" ]; then
-		echo "cidr_length_to_mask() requires at least one parameter!"
-		exit 1
-	fi
-	if ! [[ "${1}" =~ ^[[:digit:]]+$ ]]; then
-		echo "cidr_length_to_mask() requires at numeric value as parameter!"
-		exit 1
-	fi
-	if [ ${1} -lt 0 ] || [ ${1} -gt 32 ]; then
-		echo "cidr_length_to_mask() requires at parameter to be in a range of 0 to 32!"
-		exit 1
-	fi
-	case ${1} in
-		0) mask="0.0.0.0" ;;
-		1) mask="128.0.0.0" ;;
-		2) mask="192.0.0.0" ;;
-		3) mask="224.0.0.0" ;;
-		4) mask="240.0.0.0" ;;
-		5) mask="248.0.0.0" ;;
-		6) mask="252.0.0.0" ;;
-		7) mask="254.0.0.0" ;;
-		8) mask="255.0.0.0" ;;
-		9) mask="255.128.0.0" ;;
-		10) mask="255.192.0.0" ;;
-		11) mask="255.224.0.0" ;;
-		12) mask="255.240.0.0" ;;
-		13) mask="255.248.0.0" ;;
-		14) mask="255.252.0.0" ;;
-		15) mask="255.254.0.0" ;;
-		16) mask="255.255.0.0" ;;
-		17) mask="255.255.128.0" ;;
-		18) mask="255.255.192.0" ;;
-		19) mask="255.255.224.0" ;;
-		20) mask="255.255.240.0" ;;
-		21) mask="255.255.248.0" ;;
-		22) mask="255.255.252.0" ;;
-		23) mask="255.255.254.0" ;;
-		24) mask="255.255.255.0" ;;
-		25) mask="255.255.255.128" ;;
-		26) mask="255.255.255.192" ;;
-		27) mask="255.255.255.224" ;;
-		28) mask="255.255.255.240" ;;
-		29) mask="255.255.255.248" ;;
-		30) mask="255.255.255.252" ;;
-		31) mask="255.255.255.254" ;;
-		32) mask="255.255.255.255" ;;
-		*) echo "invalid CIDR length found!"; exit 1 ;;
-	esac
-	if [ -z "${mask}" ]; then
-		echo "cidr_length_to_mask() was unable to convert ${1} into a mask!"
-		exit 1
-	fi
-	echo ${mask}
+# https://github.com/firehol/firehol/pull/113
+mask2bits() {
+        local x="${1}"
+
+        x=$[ x - ( (x >> 1) & 0x55555555) ]
+        x=$[ (x & 0x33333333) + ( (x >> 2) & 0x33333333) ]
+        x=$[ (x + (x >> 4) ) & 0x0F0F0F0F ]
+        x=$[ x + (x >> 8) ]
+        x=$[ x + (x >> 16) ]
+        echo $[ 1 << (x & 0x0000003F) ]
+}
+
+# https://github.com/firehol/firehol/pull/113
+cidr_length_to_mask() {
+        local n="${1}" hex
+
+        # find the mask in hex
+        hex="$(printf "%x" $[ ~(( 1 << ( 32 - n )) -1 ) ])"
+
+        # get the last 8 digits of the number (bash uses 64 bit numbers)
+        hex="${hex: -8}"
+
+        printf "%d.%d.%d.%d\n" "0x${hex:0:2}" "0x${hex:2:2}" "0x${hex:4:2}" "0x${hex:6:2}"
 }
 
 show_interfaces() {

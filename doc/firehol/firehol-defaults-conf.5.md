@@ -1,14 +1,19 @@
-% firehol-variables(5) FireHOL Reference | VERSION
+% firehol-defaults.conf(5) FireHOL Reference | VERSION
 % FireHOL Team
 % Built DATE
 
 # NAME
 
-firehol-variables - control variables for FireHOL
+firehol-defaults.conf - control variables for FireHOL
+
+<!--
+extra-manpage: firehol-defaults.conf.5
+extra-manpage: firehol-variables.5
+  -->
 
 # SYNOPSIS
 
-Defaults:
+Defaults in `/etc/firehol/firehol-defaults.conf`:
 
 * DEFAULT\_INTERFACE\_POLICY="DROP"
 * DEFAULT\_ROUTER\_POLICY="RETURN"
@@ -32,22 +37,21 @@ Defaults:
 * FIREHOL\_AUTOSAVE6=*see notes*
 * FIREHOL\_LOAD\_KERNEL\_MODULES="1"
 * FIREHOL\_TRUST\_LOOPBACK="1"
-* FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_FIN="0"
-* FIREHOL\_DEBUGGING=""
+* FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_FIN="1"
+* FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_RST="1"
+* FIREHOL\_DROP\_ORPHAN\_TCP\_ACK="1"
+* FIREHOL\_DROP\_ORPHAN\_TCP\_RST="1"
+* FIREHOL\_DROP\_ORPHAN\_IPV4\_ICMP\_TYPE3="1"
 * WAIT\_FOR\_IFACE=""
 
 # DESCRIPTION
 
-There are a number of variables that control the behaviour of FireHOL.
+From FireHOL 3 upwards, variables which control FireHOL behaviour are
+held in a separate file: `/etc/firehol/firehol-defaults.conf`.
 
-All variables may be set in the main FireHOL configuration file
-`/etc/firehol/firehol.conf`.
-
-Variables which affect the runtime but not the created firewall may also
-be set as environment variables before running
-[firehol(1)][]. These can change the default values but will
-be overwritten by values set in the configuration file. If a variable
-can be set by an environment variable it is specified below.
+Some variables can also be set in the main firehol.conf file but that
+is not recommended, since they may be used before the main configuration
+is processed.
 
 FireHOL also sets some variables before processing the configuration
 file which you can use as part of your configuration. These are
@@ -117,7 +121,6 @@ FIREHOL\_{INPUT|OUTPUT|FORWARD}\_ACTIVATION\_POLICY
 :   These variables control the default action to be taken on traffic
     during firewall activation for incoming, outgoing and forwarding
     respectively. Acceptable values are `ACCEPT`, `DROP` and `REJECT`.
-    They may be set as environment variables.
 
     FireHOL defaults all values to `ACCEPT` so that your communications
     continue to work uninterrupted.
@@ -262,8 +265,7 @@ DEFAULT\_CLIENT\_PORTS
 FIREHOL\_NAT
 :   If set to 1, this variable causes FireHOL to load the NAT kernel
     modules. If you make use of the NAT helper commands, the variable
-    will be set to 1 automatically. It may be set as an environment
-    variable.
+    will be set to 1 automatically.
 
     Example:
 
@@ -275,8 +277,7 @@ FIREHOL\_NAT
 FIREHOL\_ROUTING
 :   If set to 1, this variable causes FireHOL to enable routing in the
     kernel. If you make use of `router` definitions or certain helper
-    commands the variable will be set to 1 automatically. It may be set
-    as an environment variable.
+    commands the variable will be set to 1 automatically.
 
     Example:
 
@@ -288,7 +289,7 @@ FIREHOL\_ROUTING
 FIREHOL\_AUTOSAVE; FIREHOL\_AUTOSAVE6
 :   These variables specify the file of IPv4/IPv6 rules that will be
     created when [firehol(1)][] is called with the `save`
-    argument. It may be set as an environment variable.
+    argument.
 
     If the variable is not set, a system-specific value is used which
     was defined at configure-time. If no value was chosen then the save
@@ -306,7 +307,7 @@ FIREHOL\_LOAD\_KERNEL\_MODULES
 :   If set to 0, this variable forces FireHOL to not load any kernel
     modules. It is needed only if the kernel has modules statically
     included and in the rare event that FireHOL cannot access the kernel
-    configuration. It may be set as an environment variable.
+    configuration.
 
     Example:
 
@@ -336,7 +337,7 @@ FIREHOL\_TRUST\_LOOPBACK
     ~~~~
 
 FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_FIN
-:   If set to 1, FireHOL will drop all TCP connections with ACK FIN set
+:   If set to 1, FireHOL will drop all orphan such packets
     without logging them.
 
     In busy environments the iptables(8) connection tracker removes
@@ -351,31 +352,72 @@ FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_FIN
     FIREHOL_DROP_ORPHAN_TCP_ACK_FIN="1"
     ~~~~
 
-FIREHOL\_DEBUGGING
-:   If set to a non-empty value, switches on debug output so that it is
-    possible to see what processing FireHOL is doing.
+FIREHOL\_DROP\_ORPHAN\_TCP\_ACK\_RST
+:   If set to 1, FireHOL will drop all orphan such packets
+    without logging them.
 
-    > **Note**
-    >
-    > This variable can *only* be set as an environment variable, since
-    > it is processed before any configuration files are read.
+    In busy environments the iptables(8) connection tracker removes
+    connection tracking list entries as soon as it receives a RST. This
+    makes the ACK RST appear as an invalid packet which will normally be
+    logged by FireHOL.
 
     Example:
 
     ~~~~
 
-    FIREHOL_DEBUGGING="Y"
+    FIREHOL_DROP_ORPHAN_TCP_ACK_RST="1"
+    ~~~~
+
+FIREHOL\_DROP\_ORPHAN\_TCP\_ACK
+:   If set to 1, FireHOL will drop all orphan such packets
+    without logging them.
+
+    In busy environments the iptables(8) connection tracker removes
+    uneeded connection tracking list entries. This makes ACK packets
+    appear as an invalid packet which will normally be logged by FireHOL.
+
+    Example:
+
+    ~~~~
+
+    FIREHOL_DROP_ORPHAN_TCP_ACK="1"
+    ~~~~
+
+FIREHOL\_DROP\_ORPHAN\_TCP\_RST
+:   If set to 1, FireHOL will drop all orphan such packets
+    without logging them.
+
+    In busy environments the iptables(8) connection tracker removes
+    uneeded connection tracking list entries. This makes RST packets
+    appear as an invalid packet which will normally be logged by FireHOL.
+
+    Example:
+
+    ~~~~
+
+    FIREHOL_DROP_ORPHAN_TCP_RST="1"
+    ~~~~
+
+FIREHOL\_DROP\_ORPHAN\_IPV4\_ICMP\_TYPE3
+:   If set to 1, FireHOL will drop all orphan ICMP destination
+    unreachable packets without logging them.
+
+    In busy environments the iptables(8) connection tracker removes
+    uneeded connection tracking list entries. This makes ICMP destination
+    unreachable appear as an invalid packet which will normally be logged
+    by FireHOL.
+
+    Example:
+
+    ~~~~
+
+    FIREHOL_DROP_ORPHAN_IPV4_ICMP_TYPE3="1"
     ~~~~
 
 WAIT\_FOR\_IFACE
 :   If set to the name of a network device (e.g. eth0), FireHOL will
     wait until the device is up (or until 60 seconds have elapsed)
     before continuing.
-
-    > **Note**
-    >
-    > This variable can *only* be set as an environment variable, since
-    > it determines when the main configuration file will be processed.
 
     A device does not need to be up in order to have firewall rules
     created for it, so this option should only be used if you have a

@@ -25,7 +25,7 @@
 #       See the file COPYING for details.
 #
 
-VERSION='$Id: 4cefa058a1a8386a9dce135418839de8eda99e0d $'
+VERSION='$Id: ceee876f36ab1063a82cbd9273fb1f4469d7696e $'
 PROGRAM_FILE="${0}"
 PROGRAM_DIR="${0%/*}"
 if [ "$PROGRAM_DIR" = "$0" ]; then PROGRAM_DIR="."; fi
@@ -134,7 +134,7 @@ Y|CHOWN_CMD|@CHOWN@|chown
 Y|CHMOD_CMD|@CHMOD@|chmod
 Y|RM_CMD|@RM@|rm
 Y|PING_CMD|@PING@|ping
-Y|PING6_CMD|@PING6@|ping6
+Y|PING6_CMD|@PING6@|ping6 'ping -6'
 Y|TRACEROUTE_CMD|@TRACEROUTE@|traceroute
 Y|SORT_CMD|@SORT@|sort
 Y|MKTEMP_CMD|@MKTEMP@|mktemp
@@ -1888,7 +1888,7 @@ policy
 # You can also have all the IPs in separate files:
 # Run:
 #
-#  ${PROGRAM_FILE} asips ONE_IP_OF_YOUR_PROVIDER_1 >/etc/firehol/PROVIDER1_IPS
+#  ${PROGRAM_FILE} asips ONE_IP_OF_YOUR_PROVIDER_1 >$sysconfdir_POST/firehol/PROVIDER1_IPS
 #
 # Then:
 	rules dst loadfile PROVIDER1_IPS table dsl1
