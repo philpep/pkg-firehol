@@ -1,13 +1,12 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0
 Upstream-Name: firehol
 Upstream-Contact:
  Costa Tsaousis <costa@firehol.org>, <costa@tsaousis.gr>
  Phil Whineray <phil@firehol.org>
-Source: http://firehol.org
-X-Source: http://www.ohloh.net/p/firehol
-X-Source-Downloaded-From: http://firehol.org/download/firehol/releases
-X-Upstream-Vcs: git clone https://github.com/ktsaou/firehol.git
-X-Upstream-Bugs: http://github.com/ktsaou/firehol/issues
+Source: https://firehol.org
+X-Source-Downloaded-From: https://github.com/firehol/firehol/releases
+X-Upstream-Vcs: https://github.com/firehol/firehol.git
+X-Upstream-Bugs: https://github.com/firehol/firehol/issues
 Files-Excluded:
  doc/tools/pandoc-post
  doc/vnetbuild/man
@@ -24,6 +23,8 @@ Files-Excluded:
  doc/service-links
  autotool/install-sh
  autotool/missing
+ sbin/install.config.in
+ tests/Makefile.in
  html/ipsets/Makefile.in
  html/Makefile.in
  contrib/Makefile.in
@@ -44,13 +45,13 @@ Comment:
 
 Files: *
 Copyright:
-	2012-2016 Phil Whineray <phil@firehol.org>
-  2003-2016 Costa Tsaousis <costa@tsaousis.gr>
+ 2012-2017 Phil Whineray <phil@firehol.org>
+ 2003-2017 Costa Tsaousis <costa@tsaousis.gr>
 License: GPL-2+
 
 Files: debian/*
 Copyright:
- 2013-2016 Jerome Benoit <calculus@rezozer.net>
+ 2013-2017 Jerome Benoit <calculus@rezozer.net>
  2004-2009 Alexander Wirt <formorer@debian.org>
  2003-2004 Marc Brockschmidt <he@debian.org>
 License: GPL-2+

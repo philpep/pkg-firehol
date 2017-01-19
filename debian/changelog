@@ -1,3 +1,12 @@
+firehol (3.1.1+ds-0) UNRELEASED; urgency=medium
+
+  * New upstream minor version.
+  * Debianization:
+    - debian/copyright, refresh;
+    - debian/watch, update.
+
+ -- Jerome Benoit <calculus@rezozer.net>  Thu, 19 Jan 2017 20:06:40 +0000
+
 firehol (3.0.2+ds-1) unstable; urgency=medium
 
   * New upstream version.
