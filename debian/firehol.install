@@ -1,4 +1,4 @@
+usr/lib/firehol/firehol
 debian/firehol.conf etc/firehol
-sbin/firehol usr/sbin
 usr/share/doc/firehol/contrib/firehol.service usr/share/doc/firehol/examples/contrib/systemd
 debian/adhoc/contrib/systemd/README.firehol   usr/share/doc/firehol/examples/contrib/systemd

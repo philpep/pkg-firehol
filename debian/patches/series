@@ -1,2 +1,3 @@
-upstream-lintian-spelling-error-silence.patch
-debianization-fireqos.patch
+upstream-silence-lintian-example-interpreter-not-absolute.patch
+upstream-update-doc-copyright-year.patch
+debianization.patch

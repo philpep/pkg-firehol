@@ -1,1 +1,2 @@
-usr/lib/firehol
+usr/lib/firehol/install.config
+usr/lib/firehol/functions.common

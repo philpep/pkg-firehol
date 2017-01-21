@@ -11,7 +11,7 @@ Build-Depends-Indep:
  inetutils-ping | iputils-ping , traceroute,
  procps,
  curl, wget, whois, jq, unzip, git, graphviz,
- screen, ksh
+ screen
 Standards-Version: 3.9.8
 Homepage: https://firehol.org
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/firehol.git
@@ -87,7 +87,7 @@ Package: firehol-tools
 Architecture: all
 Depends:
  firehol-common (= ${binary:Version}),
- curl, wget, whois, jq, unzip, git, graphviz, screen, ksh,
+ curl, wget, whois, jq, unzip, git, graphviz, screen,
  ${misc:Depends}
 Recommends: firehol (= ${binary:Version})
 Enhances: fireqos (= ${binary:Version})
